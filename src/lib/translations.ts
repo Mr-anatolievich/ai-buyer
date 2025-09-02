@@ -244,7 +244,7 @@ const translations: Record<Language, TranslationKeys> = {
   uk: {
     // Navigation
     dashboard: 'Панель управління',
-    autoupload: 'Автозавантаження',
+    autoupload: 'Автозалив',
     statistics: 'Статистика',
     creatives: 'Креативи',
     aiAnalyst: 'ШІ Аналітик',
