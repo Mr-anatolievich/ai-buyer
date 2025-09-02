@@ -67,26 +67,26 @@ export function AppSidebar() {
 
   const getNavClassName = (path: string) =>
     isActive(path) 
-      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm' 
-      : 'hover:bg-sidebar-accent/70 text-sidebar-foreground transition-all duration-200 hover:translate-x-1';
+      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
+      : 'hover:bg-sidebar-accent/50 text-sidebar-foreground transition-colors duration-150';
 
   const renderMenuSection = (items: typeof mainItems, label: string, Icon?: React.ComponentType<any>) => (
-    <SidebarGroup className="mb-2">
-      <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-2 text-sidebar-foreground/60 font-medium`}>
-        {Icon && <Icon className="w-4 h-4" />}
-        {label}
+    <SidebarGroup className="mb-1">
+      <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-2 text-sidebar-foreground/60 font-medium px-1 mb-1`}>
+        {Icon && <Icon className="w-3 h-3" />}
+        <span className="text-xs">{label}</span>
       </SidebarGroupLabel>
-      <SidebarGroupContent className="mt-2">
-        <SidebarMenu className="space-y-1">
+      <SidebarGroupContent>
+        <SidebarMenu className="space-y-0.5">
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild className="h-10">
+              <SidebarMenuButton asChild className="h-9">
                 <NavLink 
                   to={item.url} 
-                  className={`${getNavClassName(item.url)} rounded-lg border border-transparent hover:border-sidebar-border/50`}
+                  className={`${getNavClassName(item.url)} rounded-md border border-transparent hover:border-sidebar-border/30`}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && <span className="ml-3 font-medium">{item.title}</span>}
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {!collapsed && <span className="ml-2 text-sm font-medium">{item.title}</span>}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -97,31 +97,31 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar className={`${collapsed ? 'w-16' : 'w-72'} border-r border-sidebar-border/50`} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border/50 p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-md">
-            <Bot className="w-5 h-5 text-primary-foreground" />
+    <Sidebar className={`${collapsed ? 'w-16' : 'w-64'} border-r`} collapsible="icon">
+      <SidebarHeader className="border-b p-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
+            <Bot className="w-4 h-4 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div>
-              <h2 className="font-bold text-lg text-sidebar-foreground">AI Buyer</h2>
-              <p className="text-xs text-sidebar-foreground/60">Ads Management</p>
+              <h2 className="font-bold text-base text-sidebar-foreground">AI Buyer</h2>
+              <p className="text-xs text-sidebar-foreground/60 -mt-0.5">Ads Management</p>
             </div>
           )}
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="p-4 space-y-6">
+      <SidebarContent className="p-2 space-y-4">
         {renderMenuSection(mainItems, 'Main', LayoutDashboard)}
         
-        <Separator className="bg-sidebar-border/30" />
+        <Separator className="bg-sidebar-border/30 mx-2" />
         {renderMenuSection(analyticsItems, 'Analytics', TrendingUp)}
         
-        <Separator className="bg-sidebar-border/30" />
+        <Separator className="bg-sidebar-border/30 mx-2" />
         {renderMenuSection(managementItems, 'Management', ShieldCheck)}
         
-        <Separator className="bg-sidebar-border/30" />
+        <Separator className="bg-sidebar-border/30 mx-2" />
         {renderMenuSection(systemItems, 'System', Settings)}
       </SidebarContent>
     </Sidebar>
