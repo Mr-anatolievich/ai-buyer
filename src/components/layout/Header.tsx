@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Globe, User, Settings, LogOut } from 'lucide-react';
+import { Bot, Globe, User, Settings, LogOut, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useTranslations } from '@/lib/translations';
+import { useTheme } from 'next-themes';
 
 const LANGUAGES = {
   en: 'EN',
@@ -16,6 +17,7 @@ const LANGUAGES = {
 export function Header() {
   const { user, language, setLanguage, setAiAnalystOpen } = useAppStore();
   const t = useTranslations();
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b bg-card">
@@ -39,6 +41,17 @@ export function Header() {
         >
           <Bot className="w-4 h-4" />
           {t.aiAnalyst}
+        </Button>
+
+        {/* Theme Switcher */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="gap-2"
+        >
+          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
 
         {/* Language Switcher */}
