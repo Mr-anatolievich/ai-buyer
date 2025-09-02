@@ -71,7 +71,7 @@ export function AppSidebar() {
       : 'hover:bg-sidebar-accent/50 text-sidebar-foreground transition-colors duration-150';
 
   const renderMenuSection = (items: typeof mainItems, label: string, Icon?: React.ComponentType<any>) => (
-    <SidebarGroup className="mb-1">
+    <SidebarGroup className="mb-0.5">
       <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-2 text-sidebar-foreground/60 font-medium px-1 mb-1`}>
         {Icon && <Icon className="w-3 h-3" />}
         <span className="text-xs">{label}</span>
@@ -112,7 +112,7 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="p-2 space-y-4">
+      <SidebarContent className="p-2 space-y-2">
         {renderMenuSection(mainItems, 'Main', LayoutDashboard)}
         
         <Separator className="bg-sidebar-border/30 mx-2" />
