@@ -12,31 +12,32 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslations } from '@/lib/translations';
 
 const MOCK_STATS = [
   {
-    title: 'Total Spend',
+    title: 'totalSpend',
     value: '$12,426',
     change: '+12.3%',
     trend: 'up' as const,
     icon: DollarSign,
   },
   {
-    title: 'Conversions',
+    title: 'totalConversions',
     value: '1,847',
     change: '+8.7%',
     trend: 'up' as const,
     icon: TrendingUp,
   },
   {
-    title: 'Reach',
+    title: 'reach',
     value: '47.2K',
     change: '-2.1%',
     trend: 'down' as const,
     icon: Users,
   },
   {
-    title: 'Active Campaigns',
+    title: 'activeCampaigns',
     value: '23',
     change: '+3',
     trend: 'up' as const,
@@ -72,6 +73,7 @@ const RECENT_CAMPAIGNS = [
 ];
 
 export default function DashboardPage() {
+  const t = useTranslations();
   const navigate = useNavigate();
 
   return (
@@ -79,14 +81,14 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">{t.dashboard}</h1>
           <p className="text-muted-foreground mt-1">
-            Welcome back! Here's your advertising performance overview.
+            {t.welcomeBack}! Ось огляд ефективності вашої реклами.
           </p>
         </div>
         <Button onClick={() => navigate('/autoupload')} className="gap-2">
           <Plus className="w-4 h-4" />
-          Create Campaign
+          {t.createCampaign}
         </Button>
       </div>
 
@@ -96,7 +98,7 @@ export default function DashboardPage() {
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
+                {t[stat.title as keyof typeof t]}
               </CardTitle>
               <stat.icon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
@@ -111,7 +113,7 @@ export default function DashboardPage() {
                 <span className={stat.trend === 'up' ? 'text-success' : 'text-destructive'}>
                   {stat.change}
                 </span>
-                <span className="text-muted-foreground">from last month</span>
+                <span className="text-muted-foreground">з минулого місяця</span>
               </div>
             </CardContent>
           </Card>
@@ -122,8 +124,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Campaigns</CardTitle>
-            <CardDescription>Your latest advertising campaigns</CardDescription>
+            <CardTitle>{t.recentCampaigns}</CardTitle>
+            <CardDescription>Ваші останні рекламні кампанії</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -137,12 +139,12 @@ export default function DashboardPage() {
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {campaign.conversions} conversions • CPA: {campaign.cpa}
+                      {campaign.conversions} {t.conversions} • CPA: {campaign.cpa}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium">{campaign.spend}</div>
-                    <div className="text-sm text-muted-foreground">spent</div>
+                    <div className="text-sm text-muted-foreground">витрачено</div>
                   </div>
                 </div>
               ))}
@@ -152,13 +154,13 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Performance Overview</CardTitle>
-            <CardDescription>Key metrics for this month</CardDescription>
+            <CardTitle>Огляд ефективності</CardTitle>
+            <CardDescription>Ключові показники за цей місяць</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span>Budget Utilization</span>
+                <span>Використання бюджету</span>
                 <span>74%</span>
               </div>
               <Progress value={74} className="h-2" />
@@ -166,7 +168,7 @@ export default function DashboardPage() {
             
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span>Conversion Rate</span>
+                <span>Коефіцієнт конверсії</span>
                 <span>3.2%</span>
               </div>
               <Progress value={32} className="h-2" />
@@ -174,14 +176,14 @@ export default function DashboardPage() {
             
             <div>
               <div className="flex items-center justify-between text-sm mb-2">
-                <span>Click-through Rate</span>
+                <span>Частота кліків</span>
                 <span>1.8%</span>
               </div>
               <Progress value={18} className="h-2" />
             </div>
 
             <Button variant="outline" className="w-full mt-4" onClick={() => navigate('/statistics')}>
-              View Detailed Statistics
+              Переглянути детальну статистику
             </Button>
           </CardContent>
         </Card>

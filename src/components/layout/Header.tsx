@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Bot, Globe, User, Settings, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { useTranslations } from '@/lib/translations';
 
 const LANGUAGES = {
   en: 'EN',
@@ -14,6 +15,7 @@ const LANGUAGES = {
 
 export function Header() {
   const { user, language, setLanguage, setAiAnalystOpen } = useAppStore();
+  const t = useTranslations();
 
   return (
     <header className="flex items-center justify-between px-6 py-4 border-b bg-card">
@@ -36,7 +38,7 @@ export function Header() {
           className="gap-2"
         >
           <Bot className="w-4 h-4" />
-          AI Analyst
+          {t.aiAnalyst}
         </Button>
 
         {/* Language Switcher */}
@@ -80,16 +82,16 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem className="gap-2">
               <User className="w-4 h-4" />
-              Profile
+              {t.profile}
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2">
               <Settings className="w-4 h-4" />
-              Settings
+              {t.settings}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-destructive">
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight, Save, RotateCcw, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from '@/lib/translations';
 
 export function WizardControls() {
   const { 
@@ -15,6 +16,7 @@ export function WizardControls() {
     draft 
   } = useAppStore();
   const { toast } = useToast();
+  const t = useTranslations();
 
   const progress = (currentStep / 3) * 100;
   const canGoNext = validateStep(currentStep);

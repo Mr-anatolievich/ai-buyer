@@ -9,10 +9,12 @@ import { PreviewPanel } from '@/components/auto-upload/PreviewPanel';
 import { WizardControls } from '@/components/auto-upload/WizardControls';
 import { TemplatesTab } from '@/components/auto-upload/TemplatesTab';
 import { useAppStore } from '@/store/useAppStore';
+import { useTranslations } from '@/lib/translations';
 
 export default function AutoUploadPage() {
   const { currentStep } = useAppStore();
   const [activeTab, setActiveTab] = useState('wizard');
+  const t = useTranslations();
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -31,17 +33,17 @@ export default function AutoUploadPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Autoupload</h1>
+        <h1 className="text-3xl font-bold">{t.autoupload}</h1>
         <p className="text-muted-foreground mt-1">
-          Create your advertising campaign step by step
+          Створіть свою рекламну кампанію крок за кроком
         </p>
       </div>
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="wizard">Campaign Wizard</TabsTrigger>
-          <TabsTrigger value="templates">Comments/Templates</TabsTrigger>
+          <TabsTrigger value="wizard">Майстер кампанії</TabsTrigger>
+          <TabsTrigger value="templates">{t.templates}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="wizard" className="space-y-6">
@@ -55,16 +57,16 @@ export default function AutoUploadPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    Step {currentStep}: {
-                      currentStep === 1 ? 'Campaign Setup' : 
-                      currentStep === 2 ? 'Audience & Targeting' : 
-                      'Creative & Destination'
+                    Крок {currentStep}: {
+                      currentStep === 1 ? 'Налаштування кампанії' : 
+                      currentStep === 2 ? 'Аудиторія та таргетування' : 
+                      'Креатив та призначення'
                     }
                   </CardTitle>
                   <CardDescription>
-                    {currentStep === 1 && 'Configure your campaign objective and budget'}
-                    {currentStep === 2 && 'Define your target audience and placements'}
-                    {currentStep === 3 && 'Upload creative assets and set destination'}
+                    {currentStep === 1 && 'Налаштуйте мету кампанії та бюджет'}
+                    {currentStep === 2 && 'Визначте цільову аудиторію та розміщення'}
+                    {currentStep === 3 && 'Завантажте креативи та встановіть призначення'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -23,25 +23,27 @@ import {
   Terminal, 
   Settings 
 } from 'lucide-react';
-
-const menuItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Autoupload', url: '/autoupload', icon: Upload },
-  { title: 'Statistics', url: '/statistics', icon: BarChart3 },
-  { title: 'Creatives Library', url: '/creatives', icon: Image },
-  { title: 'AI Analyst', url: '/ai-analyst', icon: Bot },
-  { title: 'Accounts', url: '/accounts', icon: Users },
-  { title: 'Team', url: '/team', icon: UsersIcon },
-  { title: 'Auto Rules', url: '/auto-rules', icon: Zap },
-  { title: 'Billings', url: '/billings', icon: CreditCard },
-  { title: 'Console', url: '/console', icon: Terminal },
-  { title: 'Settings', url: '/settings', icon: Settings },
-];
+import { useTranslations } from '@/lib/translations';
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const collapsed = state === 'collapsed';
+  const t = useTranslations();
+
+  const menuItems = [
+    { title: t.dashboard, url: '/', icon: LayoutDashboard },
+    { title: t.autoupload, url: '/autoupload', icon: Upload },
+    { title: t.statistics, url: '/statistics', icon: BarChart3 },
+    { title: t.creatives, url: '/creatives', icon: Image },
+    { title: t.aiAnalyst, url: '/ai-analyst', icon: Bot },
+    { title: t.accounts, url: '/accounts', icon: Users },
+    { title: t.team, url: '/team', icon: UsersIcon },
+    { title: t.autoRules, url: '/auto-rules', icon: Zap },
+    { title: t.billings, url: '/billings', icon: CreditCard },
+    { title: t.console, url: '/console', icon: Terminal },
+    { title: t.settings, url: '/settings', icon: Settings },
+  ];
 
   const isActive = (path: string) => {
     if (path === '/') {

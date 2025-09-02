@@ -8,18 +8,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import type { CampaignObjective, BudgetType } from '@/store/useAppStore';
-
-const OBJECTIVES: { value: CampaignObjective; label: string; description: string }[] = [
-  { value: 'Conversions', label: 'Conversions', description: 'Drive actions on your website' },
-  { value: 'Traffic', label: 'Traffic', description: 'Send people to your website' },
-  { value: 'Engagement', label: 'Engagement', description: 'Get more likes, comments, and shares' },
-  { value: 'Leads', label: 'Leads', description: 'Collect leads for your business' },
-  { value: 'Brand Awareness', label: 'Brand Awareness', description: 'Increase awareness of your brand' },
-];
+import { useTranslations } from '@/lib/translations';
 
 export function CampaignStep() {
   const { draft, updateCampaignDraft, validateStep } = useAppStore();
   const { campaign } = draft;
+  const t = useTranslations();
+
+  const OBJECTIVES: { value: CampaignObjective; label: string; description: string }[] = [
+    { value: 'Conversions', label: 'Конверсії', description: 'Стимулювання дій на вашому веб-сайті' },
+    { value: 'Traffic', label: 'Трафік', description: 'Направлення людей на ваш веб-сайт' },
+    { value: 'Engagement', label: 'Залученість', description: 'Отримання більше лайків, коментарів та поширень' },
+    { value: 'Leads', label: 'Ліди', description: 'Збір лідів для вашого бізнесу' },
+    { value: 'Brand Awareness', label: 'Впізнаваність бренду', description: 'Підвищення обізнаності про ваш бренд' },
+  ];
 
   const isValid = validateStep(1);
 
@@ -35,25 +37,25 @@ export function CampaignStep() {
     <div className="space-y-6">
       {/* Campaign Name */}
       <div className="space-y-2">
-        <Label htmlFor="campaign-name">Campaign Name *</Label>
+        <Label htmlFor="campaign-name">{t.campaignNameLabel} *</Label>
         <Input
           id="campaign-name"
           value={campaign.name}
           onChange={(e) => updateCampaignDraft({ name: e.target.value })}
-          placeholder="e.g., Summer Collection 2024"
+          placeholder={t.campaignNamePlaceholder}
           className={!campaign.name.trim() && !isValid ? 'border-destructive' : ''}
         />
         {!campaign.name.trim() && !isValid && (
-          <p className="text-sm text-destructive">Campaign name is required</p>
+          <p className="text-sm text-destructive">Назва кампанії є обов'язковою</p>
         )}
       </div>
 
       {/* Campaign Objective */}
       <div className="space-y-2">
-        <Label>Campaign Objective *</Label>
+        <Label>{t.objective} *</Label>
         <Select value={campaign.objective} onValueChange={handleObjectiveChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Select campaign objective" />
+            <SelectValue placeholder="Виберіть мету кампанії" />
           </SelectTrigger>
           <SelectContent>
             {OBJECTIVES.map((objective) => (
@@ -73,20 +75,20 @@ export function CampaignStep() {
       {/* Budget Section */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-medium">Budget & Schedule</h3>
-          <p className="text-sm text-muted-foreground">Set your campaign budget and schedule</p>
+          <h3 className="text-lg font-medium">Бюджет та розклад</h3>
+          <p className="text-sm text-muted-foreground">Встановіть бюджет та розклад вашої кампанії</p>
         </div>
 
         {/* Budget Type */}
         <div className="space-y-2">
-          <Label>Budget Type *</Label>
+          <Label>{t.budgetType} *</Label>
           <Select value={campaign.budgetType} onValueChange={handleBudgetTypeChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Daily Budget</SelectItem>
-              <SelectItem value="lifetime">Lifetime Budget</SelectItem>
+              <SelectItem value="daily">{t.daily} бюджет</SelectItem>
+              <SelectItem value="lifetime">{t.lifetime} бюджет</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -94,7 +96,7 @@ export function CampaignStep() {
         {/* Budget Amount */}
         {campaign.budgetType === 'daily' && (
           <div className="space-y-2">
-            <Label htmlFor="daily-budget">Daily Budget (USD) *</Label>
+            <Label htmlFor="daily-budget">{t.dailyBudget} (USD) *</Label>
             <Input
               id="daily-budget"
               type="number"
@@ -105,14 +107,14 @@ export function CampaignStep() {
               className={campaign.dailyBudget <= 0 && !isValid ? 'border-destructive' : ''}
             />
             {campaign.dailyBudget <= 0 && !isValid && (
-              <p className="text-sm text-destructive">Daily budget must be greater than 0</p>
+              <p className="text-sm text-destructive">Щоденний бюджет повинен бути більше 0</p>
             )}
           </div>
         )}
 
         {campaign.budgetType === 'lifetime' && (
           <div className="space-y-2">
-            <Label htmlFor="lifetime-budget">Lifetime Budget (USD) *</Label>
+            <Label htmlFor="lifetime-budget">Довічний бюджет (USD) *</Label>
             <Input
               id="lifetime-budget"
               type="number"
@@ -132,18 +134,18 @@ export function CampaignStep() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Info className="w-4 h-4" />
-            Campaign Budget Optimization (CBO)
+            Оптимізація бюджету кампанії (CBO)
           </CardTitle>
           <CardDescription>
-            Let Facebook automatically distribute your budget across ad sets to get the best results.
+            Дозвольте Facebook автоматично розподіляти ваш бюджет між групами оголошень для отримання найкращих результатів.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Enable CBO</p>
+              <p className="font-medium">Увімкнути CBO</p>
               <p className="text-sm text-muted-foreground">
-                Recommended for most campaigns
+                Рекомендується для більшості кампаній
               </p>
             </div>
             <Switch defaultChecked />
@@ -155,7 +157,7 @@ export function CampaignStep() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Your campaign will be created in <strong>Draft</strong> status. You can review and publish it after completing all steps.
+          Ваша кампанія буде створена зі статусом <strong>Чернетка</strong>. Ви можете переглянути та опублікувати її після завершення всіх кроків.
         </AlertDescription>
       </Alert>
     </div>
