@@ -3,7 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { MainLayout } from "./components/layout/MainLayout";
+import DashboardPage from "./pages/DashboardPage";
+import AutoUploadPage from "./pages/AutoUploadPage";
+import StatisticsPage from "./pages/StatisticsPage";
+import CreativesPage from "./pages/CreativesPage";
+import AccountsPage from "./pages/AccountsPage";
+import TeamPage from "./pages/TeamPage";
+import AutoRulesPage from "./pages/AutoRulesPage";
+import BillingsPage from "./pages/BillingsPage";
+import ConsolePage from "./pages/ConsolePage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +25,19 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="autoupload" element={<AutoUploadPage />} />
+            <Route path="statistics" element={<StatisticsPage />} />
+            <Route path="creatives" element={<CreativesPage />} />
+            <Route path="ai-analyst" element={<DashboardPage />} />
+            <Route path="accounts" element={<AccountsPage />} />
+            <Route path="team" element={<TeamPage />} />
+            <Route path="auto-rules" element={<AutoRulesPage />} />
+            <Route path="billings" element={<BillingsPage />} />
+            <Route path="console" element={<ConsolePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
