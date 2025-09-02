@@ -1,147 +1,346 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Download, ChevronRight, ArrowLeft } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { ArrowLeft, Play, Pause, Copy, X, Edit, TrendingUp } from 'lucide-react';
+import { StatisticsTable, CampaignData } from '@/components/statistics/StatisticsTable';
+import { StatisticsFilters, FilterState } from '@/components/statistics/StatisticsFilters';
+import { useTranslations } from '@/lib/translations';
+import { toast } from 'sonner';
 
-const MOCK_CAMPAIGNS = [
+type ViewLevel = 'campaign' | 'adset' | 'ad';
+
+// Mock data following the API contract
+const MOCK_CAMPAIGNS: CampaignData[] = [
   {
-    id: '1',
-    name: 'Summer Collection 2024',
-    status: 'Active',
-    objective: 'Conversions',
-    budget: '$500/day',
-    spend: '$2,840',
+    id: 'cmp_123',
+    status: 'ACTIVE',
+    name: '[UA] Autumn Promo',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'DAILY', amount: 150.0, currency: 'USD' },
+    results: { value: 127, type: 'PURCHASE' },
+    reach: 42135,
+    impressions: 118204,
+    frequency: 2.81,
+    clicks: 8421,
+    ctr: 0.0712,
+    cpc: 0.37,
+    cpm: 26.4,
+    spend: 3120.45,
     conversions: 127,
-    cpa: '$22.36',
-    adSets: 3,
+    cvr: 0.0151,
+    cpa: 24.57,
+    revenue: 4980.00,
+    roas: 1.595,
+    aov: 39.21,
+    ends: null,
+    learning: false,
+    issues: [],
+    ai_decision: { rec: 'SCALE', budget_change: 0.2, confidence: 0.78, why: ['ROAS 1.59 ≥ 1.3', 'Freq 2.81 < 3.5', 'CTR +9% WoW'] },
+    hasChildren: true,
   },
   {
-    id: '2',
-    name: 'Holiday Promo Campaign',
-    status: 'Active',
-    objective: 'Traffic',
-    budget: '$300/day',
-    spend: '$1,963',
+    id: 'cmp_124',
+    status: 'ACTIVE',
+    name: 'Holiday Collection 2024',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'COST_CAP',
+    budget: { type: 'DAILY', amount: 200.0, currency: 'USD' },
+    results: { value: 89, type: 'PURCHASE' },
+    reach: 38420,
+    impressions: 95680,
+    frequency: 2.49,
+    clicks: 6890,
+    ctr: 0.0720,
+    cpc: 0.42,
+    cpm: 29.1,
+    spend: 2894.80,
     conversions: 89,
-    cpa: '$22.06',
-    adSets: 2,
+    cvr: 0.0129,
+    cpa: 32.52,
+    revenue: 3567.00,
+    roas: 1.232,
+    aov: 40.08,
+    ends: null,
+    learning: false,
+    issues: [],
+    ai_decision: { rec: 'DUPLICATE', confidence: 0.65, why: ['Freq 2.49 approx 3.0', 'Good ROAS 1.23', 'Audience saturation'] },
+    hasChildren: true,
+  },
+  {
+    id: 'cmp_125',
+    status: 'PAUSED',
+    name: 'Summer Sale Retargeting',
+    delivery: 'LIMITED',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'LIFETIME', amount: 1000.0, currency: 'USD' },
+    results: { value: 23, type: 'PURCHASE' },
+    reach: 12340,
+    impressions: 28450,
+    frequency: 2.31,
+    clicks: 1420,
+    ctr: 0.0499,
+    cpc: 0.89,
+    cpm: 44.5,
+    spend: 1265.48,
+    conversions: 23,
+    cvr: 0.0162,
+    cpa: 55.02,
+    revenue: 920.00,
+    roas: 0.727,
+    aov: 40.00,
+    ends: '2024-12-31',
+    learning: false,
+    issues: ['LOW_PERFORMANCE'],
+    ai_decision: { rec: 'CLOSE', confidence: 0.92, why: ['ROAS 0.73 < 0.8', 'High CPA $55', 'Limited delivery'] },
+    hasChildren: true,
   },
 ];
 
-const MOCK_AD_SETS = [
+const MOCK_ADSETS: CampaignData[] = [
   {
-    id: '1',
+    id: 'ads_201',
+    status: 'ACTIVE',
     name: 'Women 25-35 Fashion Lovers',
-    targeting: 'US, 25-35, Female, Fashion interests',
-    budget: '$200/day',
-    spend: '$1,240',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'DAILY', amount: 75.0, currency: 'USD' },
+    results: { value: 67, type: 'PURCHASE' },
+    reach: 22350,
+    impressions: 62840,
+    frequency: 2.81,
+    clicks: 4520,
+    ctr: 0.0719,
+    cpc: 0.35,
+    cpm: 25.2,
+    spend: 1582.00,
     conversions: 67,
-    cpa: '$18.51',
-    ads: 4,
+    cvr: 0.0148,
+    cpa: 23.61,
+    revenue: 2640.00,
+    roas: 1.669,
+    aov: 39.40,
+    ends: null,
+    learning: false,
+    issues: [],
+    hasChildren: true,
   },
   {
-    id: '2',
+    id: 'ads_202',
+    status: 'ACTIVE',
     name: 'Lookalike Audience - Purchasers',
-    targeting: 'US, 23-45, All genders, Lookalike',
-    budget: '$300/day',
-    spend: '$1,600',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'DAILY', amount: 75.0, currency: 'USD' },
+    results: { value: 60, type: 'PURCHASE' },
+    reach: 19785,
+    impressions: 55364,
+    frequency: 2.80,
+    clicks: 3901,
+    ctr: 0.0705,
+    cpc: 0.39,
+    cpm: 27.6,
+    spend: 1538.45,
     conversions: 60,
-    cpa: '$26.67',
-    ads: 3,
+    cvr: 0.0154,
+    cpa: 25.64,
+    revenue: 2340.00,
+    roas: 1.521,
+    aov: 39.00,
+    ends: null,
+    learning: false,
+    issues: [],
+    hasChildren: true,
   },
 ];
 
-const MOCK_ADS = [
+const MOCK_ADS: CampaignData[] = [
   {
-    id: '1',
+    id: 'ad_301',
+    status: 'ACTIVE',
     name: 'Summer Dress Video',
-    status: 'Active',
-    spend: '$620',
-    impressions: '12,450',
-    ctr: '2.3%',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'DAILY', amount: 25.0, currency: 'USD' },
+    results: { value: 34, type: 'PURCHASE' },
+    reach: 12450,
+    impressions: 28640,
+    frequency: 2.30,
+    clicks: 2100,
+    ctr: 0.0733,
+    cpc: 0.30,
+    cpm: 21.8,
+    spend: 624.00,
     conversions: 34,
-    cpa: '$18.24',
+    cvr: 0.0162,
+    cpa: 18.35,
+    revenue: 1326.00,
+    roas: 2.125,
+    aov: 39.00,
+    ends: null,
+    learning: false,
+    issues: [],
+    hasChildren: false,
   },
   {
-    id: '2',  
+    id: 'ad_302',
+    status: 'ACTIVE',
     name: 'Beach Collection Carousel',
-    status: 'Active',
-    spend: '$620',
-    impressions: '15,230',
-    ctr: '1.8%',
+    delivery: 'ELIGIBLE',
+    bid_strategy: 'LOWEST_COST',
+    budget: { type: 'DAILY', amount: 25.0, currency: 'USD' },
+    results: { value: 33, type: 'PURCHASE' },
+    reach: 9900,
+    impressions: 34200,
+    frequency: 3.45,
+    clicks: 1420,
+    ctr: 0.0415,
+    cpc: 0.44,
+    cpm: 18.2,
+    spend: 622.80,
     conversions: 33,
-    cpa: '$18.79',
+    cvr: 0.0232,
+    cpa: 18.87,
+    revenue: 1314.00,
+    roas: 2.109,
+    aov: 39.82,
+    ends: null,
+    learning: false,
+    issues: [],
+    ai_decision: { rec: 'PAUSE', confidence: 0.71, why: ['High frequency 3.45', 'CTR declining', 'Creative fatigue'] },
+    hasChildren: false,
   },
 ];
-
-const CHART_DATA = [
-  { date: '2024-01-01', spend: 420, impressions: 8500, clicks: 190, conversions: 12 },
-  { date: '2024-01-02', spend: 380, impressions: 7200, clicks: 165, conversions: 8 },
-  { date: '2024-01-03', spend: 520, impressions: 9800, clicks: 245, conversions: 18 },
-  { date: '2024-01-04', spend: 340, impressions: 6900, clicks: 155, conversions: 11 },
-  { date: '2024-01-05', spend: 680, impressions: 12400, clicks: 310, conversions: 25 },
-  { date: '2024-01-06', spend: 590, impressions: 11200, clicks: 275, conversions: 22 },
-  { date: '2024-01-07', spend: 450, impressions: 8900, clicks: 205, conversions: 15 },
-];
-
-const GEO_DATA = [
-  { name: 'United States', value: 45, color: '#3b82f6' },
-  { name: 'Canada', value: 25, color: '#10b981' },
-  { name: 'United Kingdom', value: 20, color: '#f59e0b' },
-  { name: 'Australia', value: 10, color: '#ef4444' },
-];
-
-type ViewLevel = 'campaigns' | 'adSets' | 'ads';
 
 export default function StatisticsPage() {
-  const [currentLevel, setCurrentLevel] = useState<ViewLevel>('campaigns');
+  const t = useTranslations();
+  const [currentLevel, setCurrentLevel] = useState<ViewLevel>('campaign');
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
   const [selectedAdSet, setSelectedAdSet] = useState<string | null>(null);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  const [filters, setFilters] = useState<FilterState>({
+    dateRange: {
+      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      to: new Date(),
+    },
+    status: [],
+    objective: [],
+    search: '',
+    breakdowns: [],
+    account: '',
+    columnPreset: 'performance',
+  });
 
-  const handleDrillDown = (level: ViewLevel, id?: string) => {
-    if (level === 'adSets') {
-      setSelectedCampaign(id || null);
-      setCurrentLevel('adSets');
-    } else if (level === 'ads') {
-      setSelectedAdSet(id || null);
-      setCurrentLevel('ads');
+  const [savedViews] = useState([
+    { id: '1', name: 'Активні кампанії', filters: { ...filters, status: ['active'] } },
+    { id: '2', name: 'Низька ефективність', filters: { ...filters, status: ['active'] } },
+  ]);
+
+  // Get current data based on level
+  const getCurrentData = (): CampaignData[] => {
+    if (currentLevel === 'campaign') {
+      return MOCK_CAMPAIGNS;
+    } else if (currentLevel === 'adset') {
+      return MOCK_ADSETS;
+    } else {
+      return MOCK_ADS;
+    }
+  };
+
+  const handleRowClick = (row: CampaignData) => {
+    if (currentLevel === 'campaign') {
+      setSelectedCampaign(row.id);
+      setCurrentLevel('adset');
+    } else if (currentLevel === 'adset') {
+      setSelectedAdSet(row.id);
+      setCurrentLevel('ad');
     }
   };
 
   const handleBack = () => {
-    if (currentLevel === 'ads') {
-      setCurrentLevel('adSets');
+    if (currentLevel === 'ad') {
+      setCurrentLevel('adset');
       setSelectedAdSet(null);
-    } else if (currentLevel === 'adSets') {
-      setCurrentLevel('campaigns');
+    } else if (currentLevel === 'adset') {
+      setCurrentLevel('campaign');
       setSelectedCampaign(null);
+    }
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedRows.length === 0) {
+      toast.error('Оберіть рядки для дії');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const actionLabels = {
+        pause: 'призупинено',
+        enable: 'активовано',
+        duplicate: 'дубльовано',
+        edit_budget: 'змінено бюджет',
+      };
+      
+      toast.success(`${selectedRows.length} елементів ${actionLabels[action as keyof typeof actionLabels]}`);
+      setSelectedRows([]);
+    } catch (error) {
+      toast.error('Помилка виконання дії');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    toast.success('Експорт розпочато');
+  };
+
+  const handleSaveView = (name: string) => {
+    toast.success(`Вигляд "${name}" збережено`);
+  };
+
+  const handleLoadView = (viewId: string) => {
+    const view = savedViews.find(v => v.id === viewId);
+    if (view) {
+      setFilters(view.filters);
+      toast.success(`Вигляд "${view.name}" завантажено`);
     }
   };
 
   const renderBreadcrumb = () => (
     <BreadcrumbList>
       <BreadcrumbItem>
-        <BreadcrumbLink onClick={() => {
-          setCurrentLevel('campaigns');
-          setSelectedCampaign(null);
-          setSelectedAdSet(null);
-        }}>
-          Campaigns
+        <BreadcrumbLink 
+          onClick={() => {
+            setCurrentLevel('campaign');
+            setSelectedCampaign(null);
+            setSelectedAdSet(null);
+          }}
+          className="cursor-pointer hover:text-foreground"
+        >
+          Кампанії
         </BreadcrumbLink>
       </BreadcrumbItem>
       {selectedCampaign && (
         <>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink onClick={() => {
-              setCurrentLevel('adSets');
-              setSelectedAdSet(null);
-            }}>
-              Ad Sets
+            <BreadcrumbLink 
+              onClick={() => {
+                setCurrentLevel('adset');
+                setSelectedAdSet(null);
+              }}
+              className="cursor-pointer hover:text-foreground"
+            >
+              Групи оголошень
             </BreadcrumbLink>
           </BreadcrumbItem>
         </>
@@ -150,190 +349,126 @@ export default function StatisticsPage() {
         <>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Ads</BreadcrumbPage>
+            <BreadcrumbPage>Оголошення</BreadcrumbPage>
           </BreadcrumbItem>
         </>
       )}
     </BreadcrumbList>
   );
 
-  const renderTable = () => {
-    let data, columns;
-    
-    if (currentLevel === 'campaigns') {
-      data = MOCK_CAMPAIGNS;
-      columns = ['Campaign Name', 'Status', 'Objective', 'Budget', 'Spend', 'Conversions', 'CPA', ''];
-    } else if (currentLevel === 'adSets') {
-      data = MOCK_AD_SETS;
-      columns = ['Ad Set Name', 'Targeting', 'Budget', 'Spend', 'Conversions', 'CPA', ''];
-    } else {
-      data = MOCK_ADS;
-      columns = ['Ad Name', 'Status', 'Spend', 'Impressions', 'CTR', 'Conversions', 'CPA'];
-    }
-
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((col) => (
-              <TableHead key={col}>{col}</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((row: any) => (
-            <TableRow 
-              key={row.id} 
-              className={currentLevel !== 'ads' ? 'cursor-pointer hover:bg-muted/50' : ''}
-              onClick={currentLevel !== 'ads' ? () => handleDrillDown(
-                currentLevel === 'campaigns' ? 'adSets' : 'ads', 
-                row.id
-              ) : undefined}
-            >
-              <TableCell className="font-medium">{row.name}</TableCell>
-              {currentLevel === 'campaigns' && (
-                <>
-                  <TableCell>
-                    <Badge variant={row.status === 'Active' ? 'default' : 'secondary'}>
-                      {row.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{row.objective}</TableCell>
-                  <TableCell>{row.budget}</TableCell>
-                </>
-              )}
-              {currentLevel === 'adSets' && (
-                <>
-                  <TableCell className="max-w-xs truncate">{row.targeting}</TableCell>
-                  <TableCell>{row.budget}</TableCell>
-                </>
-              )}
-              {currentLevel === 'ads' && (
-                <TableCell>
-                  <Badge variant={row.status === 'Active' ? 'default' : 'secondary'}>
-                    {row.status}
-                  </Badge>
-                </TableCell>
-              )}
-              <TableCell>{row.spend}</TableCell>
-              {currentLevel === 'ads' && <TableCell>{row.impressions}</TableCell>}
-              {currentLevel === 'ads' && <TableCell>{row.ctr}</TableCell>}
-              <TableCell>{row.conversions}</TableCell>
-              <TableCell>{row.cpa}</TableCell>
-              {currentLevel !== 'ads' && (
-                <TableCell><ChevronRight className="w-4 h-4" /></TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {currentLevel !== 'campaigns' && (
+          {currentLevel !== 'campaign' && (
             <Button variant="ghost" size="sm" onClick={handleBack}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-bold">Statistics</h1>
+            <h1 className="text-3xl font-bold">Статистика</h1>
             <Breadcrumb className="mt-1">
               {renderBreadcrumb()}
             </Breadcrumb>
           </div>
         </div>
-        <Button variant="outline" className="gap-2">
-          <Download className="w-4 h-4" />
-          Export CSV
-        </Button>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Performance Trend</CardTitle>
-            <CardDescription>Daily spend and conversions over time</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={CHART_DATA}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="spend" stroke="#3b82f6" strokeWidth={2} />
-                <Line type="monotone" dataKey="conversions" stroke="#10b981" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <StatisticsFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        onExport={handleExport}
+        savedViews={savedViews}
+        onSaveView={handleSaveView}
+        onLoadView={handleLoadView}
+      />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance by Geography</CardTitle>
-            <CardDescription>Conversion distribution by country</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={GEO_DATA}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {GEO_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="space-y-2 mt-4">
-              {GEO_DATA.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span>{item.name}</span>
-                  </div>
-                  <span>{item.value}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Bulk Actions Bar */}
+      {selectedRows.length > 0 && (
+        <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border">
+          <span className="text-sm font-medium">
+            Вибрано: {selectedRows.length}
+          </span>
+          <Separator orientation="vertical" className="h-4" />
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleBulkAction('pause')}
+              disabled={loading}
+            >
+              <Pause className="w-4 h-4 mr-2" />
+              Призупинити
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleBulkAction('enable')}
+              disabled={loading}
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Активувати
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleBulkAction('duplicate')}
+              disabled={loading}
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Дублювати
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => handleBulkAction('edit_budget')}
+              disabled={loading}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Змінити бюджет
+            </Button>
+          </div>
+          <div className="flex-1" />
+          <Button 
+            size="sm" 
+            variant="ghost"
+            onClick={() => setSelectedRows([])}
+          >
+            <X className="w-4 h-4" />
+            Скасувати вибір
+          </Button>
+        </div>
+      )}
+
+      {/* AI Insights Banner */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 dark:from-blue-950 dark:to-indigo-950 dark:border-blue-800">
+        <div className="flex items-center gap-3">
+          <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex-1">
+            <h3 className="font-medium text-blue-900 dark:text-blue-100">
+              ШІ рекомендації готові
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              Знайдено 3 можливості для масштабування та 1 кампанію для оптимізації
+            </p>
+          </div>
+          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700">
+            Переглянути всі
+          </Button>
+        </div>
       </div>
 
-      {/* Data Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {currentLevel === 'campaigns' && 'Campaigns Overview'}
-            {currentLevel === 'adSets' && 'Ad Sets Performance'}
-            {currentLevel === 'ads' && 'Individual Ads Performance'}
-          </CardTitle>
-          <CardDescription>
-            {currentLevel === 'campaigns' && 'Click on campaigns to view ad sets'}
-            {currentLevel === 'adSets' && 'Click on ad sets to view individual ads'}
-            {currentLevel === 'ads' && 'Detailed performance metrics for each ad'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {renderTable()}
-        </CardContent>
-      </Card>
+      {/* Statistics Table */}
+      <StatisticsTable
+        data={getCurrentData()}
+        level={currentLevel}
+        onRowClick={handleRowClick}
+        loading={loading}
+        selectedRows={selectedRows}
+        onRowSelection={setSelectedRows}
+      />
     </div>
   );
 }
