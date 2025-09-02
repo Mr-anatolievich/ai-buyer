@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { ArrowLeft, Play, Pause, Copy, X, Edit, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Copy, X, Edit, TrendingUp, BarChart3, Zap } from 'lucide-react';
 import { StatisticsTable, CampaignData } from '@/components/statistics/StatisticsTable';
 import { StatisticsFilters, FilterState } from '@/components/statistics/StatisticsFilters';
+import { AiInsightsPanel } from '@/components/statistics/AiInsightsPanel';
 import { useTranslations } from '@/lib/translations';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 type ViewLevel = 'campaign' | 'adset' | 'ad';
 
@@ -221,6 +223,7 @@ export default function StatisticsPage() {
   const [selectedAdSet, setSelectedAdSet] = useState<string | null>(null);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
   
   const [filters, setFilters] = useState<FilterState>({
     dateRange: {
@@ -357,23 +360,35 @@ export default function StatisticsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {currentLevel !== 'campaign' && (
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              <ArrowLeft className="w-4 h-4" />
+    <div className="flex gap-6">
+      {/* Main content */}
+      <div className={cn("space-y-6 transition-all duration-300", showAiPanel ? "flex-1" : "w-full")}>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {currentLevel !== 'campaign' && (
+              <Button variant="ghost" size="sm" onClick={handleBack}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gradient-primary">Статистика</h1>
+              <Breadcrumb className="mt-1">
+                {renderBreadcrumb()}
+              </Breadcrumb>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showAiPanel ? "default" : "outline"}
+              onClick={() => setShowAiPanel(!showAiPanel)}
+              className="gap-2"
+            >
+              <Zap className="w-4 h-4" />
+              ШІ Аналітика
             </Button>
-          )}
-          <div>
-            <h1 className="text-3xl font-bold">Статистика</h1>
-            <Breadcrumb className="mt-1">
-              {renderBreadcrumb()}
-            </Breadcrumb>
           </div>
         </div>
-      </div>
 
       {/* Filters */}
       <StatisticsFilters
@@ -442,33 +457,55 @@ export default function StatisticsPage() {
         </div>
       )}
 
-      {/* AI Insights Banner */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 dark:from-blue-950 dark:to-indigo-950 dark:border-blue-800">
-        <div className="flex items-center gap-3">
-          <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <div className="flex-1">
-            <h3 className="font-medium text-blue-900 dark:text-blue-100">
-              ШІ рекомендації готові
-            </h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              Знайдено 3 можливості для масштабування та 1 кампанію для оптимізації
-            </p>
+        {/* AI Insights Banner */}
+        <div className="ai-recommendation opportunity animate-fade-in hover-lift">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-green-900 dark:text-green-100">
+                ШІ рекомендації готові
+              </h3>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                Знайдено 3 можливості для масштабування (+$3,200 потенційного доходу)
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-right text-xs">
+                <div className="font-medium text-green-600">89% довіра</div>
+                <div className="text-green-500">Високий пріоритет</div>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-green-300 text-green-700 hover:bg-green-50"
+                onClick={() => setShowAiPanel(true)}
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Переглянути
+              </Button>
+            </div>
           </div>
-          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700">
-            Переглянути всі
-          </Button>
         </div>
+
+        {/* Statistics Table */}
+        <StatisticsTable
+          data={getCurrentData()}
+          level={currentLevel}
+          onRowClick={handleRowClick}
+          loading={loading}
+          selectedRows={selectedRows}
+          onRowSelection={setSelectedRows}
+        />
       </div>
 
-      {/* Statistics Table */}
-      <StatisticsTable
-        data={getCurrentData()}
-        level={currentLevel}
-        onRowClick={handleRowClick}
-        loading={loading}
-        selectedRows={selectedRows}
-        onRowSelection={setSelectedRows}
-      />
+      {/* AI Insights Panel */}
+      {showAiPanel && (
+        <div className="w-96 animate-slide-right">
+          <AiInsightsPanel className="sticky top-6" />
+        </div>
+      )}
     </div>
   );
 }

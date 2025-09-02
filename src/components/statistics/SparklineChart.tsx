@@ -1,0 +1,133 @@
+import { Sparklines, SparklinesLine, SparklinesSpots } from 'react-sparklines';
+import { cn } from '@/lib/utils';
+
+interface SparklineChartProps {
+  data: number[];
+  width?: number;
+  height?: number;
+  color?: 'positive' | 'negative' | 'neutral';
+  showSpots?: boolean;
+  className?: string;
+}
+
+export function SparklineChart({
+  data,
+  width = 60,
+  height = 20,
+  color = 'neutral',
+  showSpots = false,
+  className,
+}: SparklineChartProps) {
+  const colors = {
+    positive: '#10b981', // green-500
+    negative: '#ef4444',  // red-500
+    neutral: '#6b7280',   // gray-500
+  };
+
+  const sparkColor = colors[color];
+
+  // Визначаємо тренд
+  const trend = data.length >= 2 ? (data[data.length - 1] > data[0] ? 'up' : 'down') : 'neutral';
+
+  return (
+    <div className={cn('sparkline-container inline-flex items-center gap-1', className)}>
+      <Sparklines data={data} width={width} height={height} margin={2}>
+        <SparklinesLine
+          color={sparkColor}
+          style={{
+            strokeWidth: 1.5,
+            fill: 'none',
+          }}
+        />
+        {showSpots && (
+          <SparklinesSpots
+            style={{
+              fill: sparkColor,
+              fillOpacity: 0.8,
+              stroke: sparkColor,
+              strokeWidth: 1,
+            }}
+            size={2}
+          />
+        )}
+      </Sparklines>
+      
+      {/* Trend indicator */}
+      <div className={cn(
+        'w-1 h-1 rounded-full',
+        trend === 'up' && 'bg-green-500',
+        trend === 'down' && 'bg-red-500',
+        trend === 'neutral' && 'bg-gray-400'
+      )} />
+    </div>
+  );
+}
+
+// Компонент для відображення спарклайну з метрикою
+interface MetricSparklineProps {
+  label: string;
+  value: string | number;
+  data: number[];
+  change?: number;
+  format?: 'currency' | 'percentage' | 'number';
+  className?: string;
+}
+
+export function MetricSparkline({
+  label,
+  value,
+  data,
+  change,
+  format = 'number',
+  className,
+}: MetricSparklineProps) {
+  const formatValue = (val: string | number) => {
+    const numVal = typeof val === 'string' ? parseFloat(val) : val;
+    
+    switch (format) {
+      case 'currency':
+        return new Intl.NumberFormat('uk-UA', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(numVal);
+      case 'percentage':
+        return new Intl.NumberFormat('uk-UA', {
+          style: 'percent',
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 2,
+        }).format(numVal / 100);
+      default:
+        return new Intl.NumberFormat('uk-UA').format(numVal);
+    }
+  };
+
+  const changeColor = change && change > 0 ? 'positive' : change && change < 0 ? 'negative' : 'neutral';
+
+  return (
+    <div className={cn('flex items-center justify-between p-2 rounded-lg bg-muted/30', className)}>
+      <div className="flex-1">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="font-medium">{formatValue(value)}</div>
+        {change !== undefined && (
+          <div className={cn(
+            'text-xs flex items-center gap-1',
+            change > 0 && 'text-green-600',
+            change < 0 && 'text-red-600',
+            change === 0 && 'text-gray-500'
+          )}>
+            {change > 0 && '↗'}
+            {change < 0 && '↘'}
+            {change === 0 && '→'}
+            {Math.abs(change).toFixed(1)}%
+          </div>
+        )}
+      </div>
+      <SparklineChart
+        data={data}
+        color={changeColor}
+        showSpots
+        className="ml-2"
+      />
+    </div>
+  );
+}

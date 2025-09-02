@@ -17,6 +17,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowUpDown, ChevronRight, TrendingUp, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/translations';
+import { SparklineChart } from './SparklineChart';
+import { PerformanceIndicator, AnimatedProgress } from './PerformanceIndicator';
 
 export type CampaignData = {
   id: string;
@@ -104,15 +106,15 @@ export function StatisticsTable({
 
   const getStatusBadge = (status: CampaignData['status']) => {
     const variants = {
-      ACTIVE: { variant: 'default' as const, label: 'Активна' },
-      PAUSED: { variant: 'secondary' as const, label: 'Призупинена' },
-      LEARNING: { variant: 'outline' as const, label: 'Навчання' },
-      LIMITED: { variant: 'destructive' as const, label: 'Обмежена' },
-      ERROR: { variant: 'destructive' as const, label: 'Помилка' },
+      ACTIVE: { className: 'status-badge-active', label: 'Активна' },
+      PAUSED: { className: 'status-badge-paused', label: 'Призупинена' },
+      LEARNING: { className: 'status-badge-learning', label: 'Навчання' },
+      LIMITED: { className: 'status-badge-limited', label: 'Обмежена' },
+      ERROR: { className: 'status-badge-error', label: 'Помилка' },
     };
     
     const config = variants[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge className={cn('border-none text-white font-medium px-2 py-1', config.className)}>{config.label}</Badge>;
   };
 
   const getAiDecisionBadge = (aiDecision?: CampaignData['ai_decision']) => {
@@ -185,6 +187,14 @@ export function StatisticsTable({
           <div className="space-y-1">
             <div className="font-medium">{row.getValue('name')}</div>
             {row.original.ai_decision && getAiDecisionBadge(row.original.ai_decision)}
+            {/* Mini sparkline for performance trend */}
+            <SparklineChart
+              data={[1.2, 1.1, 1.3, 1.4, 1.6, 1.5, row.original.roas || 1.0]}
+              color={row.original.roas && row.original.roas > 1.3 ? 'positive' : 'negative'}
+              width={50}
+              height={12}
+              className="opacity-60"
+            />
           </div>
         ),
         minSize: 200,
@@ -196,12 +206,12 @@ export function StatisticsTable({
         cell: ({ row }) => {
           const delivery = row.getValue('delivery') as string;
           const variants = {
-            ELIGIBLE: { variant: 'default' as const, label: 'Підходить' },
-            LIMITED: { variant: 'destructive' as const, label: 'Обмежена' },
-            REJECTED: { variant: 'destructive' as const, label: 'Відхилена' },
+            ELIGIBLE: { className: 'status-badge-active', label: 'Підходить' },
+            LIMITED: { className: 'status-badge-limited', label: 'Обмежена' },
+            REJECTED: { className: 'status-badge-error', label: 'Відхилена' },
           };
           const config = variants[delivery as keyof typeof variants];
-          return <Badge variant={config.variant}>{config.label}</Badge>;
+          return <Badge className={cn('border-none text-white font-medium px-2 py-1 text-xs', config.className)}>{config.label}</Badge>;
         },
         size: 120,
       },
@@ -242,10 +252,26 @@ export function StatisticsTable({
             LEAD: 'Ліди',
             INSTALL: 'Встановлення',
           };
+          
+          // Generate mock trend data
+          const trendData = Array.from({ length: 7 }, (_, i) => 
+            results.value * (0.8 + Math.random() * 0.4)
+          );
+          
           return (
-            <div className="text-sm">
-              <div className="font-medium">{formatNumber(results.value)}</div>
-              <div className="text-muted-foreground text-xs">{types[results.type]}</div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm">
+                <div className="font-medium">{formatNumber(results.value)}</div>
+                <div className="text-muted-foreground text-xs">{types[results.type]}</div>
+              </div>
+              <SparklineChart
+                data={trendData}
+                color="positive"
+                width={40}
+                height={16}
+                showSpots
+                className="opacity-70"
+              />
             </div>
           );
         },
@@ -415,7 +441,14 @@ export function StatisticsTable({
         cell: ({ row }) => {
           const roas = row.getValue('roas') as number | undefined;
           return roas ? (
-            <div className="font-medium">{roas.toFixed(2)}x</div>
+            <PerformanceIndicator
+              value={roas}
+              threshold={{ high: 1.5, medium: 1.0 }}
+              format="number"
+              showTrend
+              trend={5.2} // Mock trend
+              label="ROAS Performance"
+            />
           ) : (
             <span className="text-muted-foreground">—</span>
           );
@@ -473,7 +506,7 @@ export function StatisticsTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border shadow-sm bg-card animate-fade-in">
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -505,7 +538,9 @@ export function StatisticsTable({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(
-                    onRowClick && row.original.hasChildren && "cursor-pointer hover:bg-muted/50"
+                    "table-row-hover animate-fade-in",
+                    row.getIsSelected() && "table-row-selected",
+                    onRowClick && row.original.hasChildren && "cursor-pointer"
                   )}
                   onClick={() => {
                     if (onRowClick && row.original.hasChildren) {
