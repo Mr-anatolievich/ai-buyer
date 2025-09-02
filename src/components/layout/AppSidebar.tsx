@@ -71,16 +71,16 @@ export function AppSidebar() {
       : 'hover:bg-sidebar-accent/50 text-sidebar-foreground transition-colors duration-150';
 
   const renderMenuSection = (items: typeof mainItems, label: string, Icon?: React.ComponentType<any>) => (
-    <SidebarGroup className="mb-0.5">
-      <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-2 text-sidebar-foreground/60 font-medium px-1 mb-1`}>
+    <SidebarGroup className="mb-0">
+      <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-1.5 text-sidebar-foreground/60 font-medium px-1 mb-0.5 h-6`}>
         {Icon && <Icon className="w-3 h-3" />}
         <span className="text-xs">{label}</span>
       </SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu className="space-y-0.5">
+        <SidebarMenu className="space-y-0">
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild className="h-9">
+              <SidebarMenuButton asChild className="h-8">
                 <NavLink 
                   to={item.url} 
                   className={`${getNavClassName(item.url)} rounded-md border border-transparent hover:border-sidebar-border/30`}
@@ -98,30 +98,30 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={`${collapsed ? 'w-16' : 'w-64'} border-r`} collapsible="icon">
-      <SidebarHeader className="border-b p-3">
+      <SidebarHeader className="border-b p-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <Bot className="w-4 h-4 text-primary-foreground" />
+          <div className="w-7 h-7 rounded-lg bg-gradient-primary flex items-center justify-center">
+            <Bot className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div>
-              <h2 className="font-bold text-base text-sidebar-foreground">AI Buyer</h2>
+              <h2 className="font-bold text-sm text-sidebar-foreground">AI Buyer</h2>
               <p className="text-xs text-sidebar-foreground/60 -mt-0.5">Ads Management</p>
             </div>
           )}
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="p-2 space-y-2">
+      <SidebarContent className="p-1.5 space-y-1 overflow-hidden">
         {renderMenuSection(mainItems, 'Main', LayoutDashboard)}
         
-        <Separator className="bg-sidebar-border/30 mx-2" />
+        <div className="h-px bg-sidebar-border/30 mx-2" />
         {renderMenuSection(analyticsItems, 'Analytics', TrendingUp)}
         
-        <Separator className="bg-sidebar-border/30 mx-2" />
+        <div className="h-px bg-sidebar-border/30 mx-2" />
         {renderMenuSection(managementItems, 'Management', ShieldCheck)}
         
-        <Separator className="bg-sidebar-border/30 mx-2" />
+        <div className="h-px bg-sidebar-border/30 mx-2" />
         {renderMenuSection(systemItems, 'System', Settings)}
       </SidebarContent>
     </Sidebar>
