@@ -183,7 +183,8 @@
   }
   
   .gradient-card-hover {
-    @apply hover:shadow-colored hover:scale-[1.02] transition-all duration-300;
+    @apply hover:scale-[1.02] transition-all duration-300;
+    box-shadow: 0 4px 12px hsl(var(--primary) / 0.15);
   }
   
   /* Table enhancements */
@@ -235,7 +236,8 @@
   }
   
   .status-badge-learning {
-    @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-colored;
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white;
+    box-shadow: var(--shadow-colored);
   }
   
   .status-badge-limited {
@@ -318,7 +320,11 @@
   }
   
   .hover-glow {
-    @apply transition-all duration-300 hover:shadow-colored;
+    @apply transition-all duration-300;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: var(--shadow-colored);
   }
   
   /* Text gradients */
