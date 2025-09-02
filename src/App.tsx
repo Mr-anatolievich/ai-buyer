@@ -9,6 +9,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AutoUploadPage from "./pages/AutoUploadPage";
 import StatisticsPage from "./pages/StatisticsPage";
 import CreativesPage from "./pages/CreativesPage";
+import AiAnalystPage from "./pages/AiAnalystPage";
 import AccountsPage from "./pages/AccountsPage";
 import TeamPage from "./pages/TeamPage";
 import AutoRulesPage from "./pages/AutoRulesPage";
@@ -32,7 +33,7 @@ const App = () => (
             <Route path="autoupload" element={<AutoUploadPage />} />
             <Route path="statistics" element={<StatisticsPage />} />
             <Route path="creatives" element={<CreativesPage />} />
-            <Route path="ai-analyst" element={<DashboardPage />} />
+            <Route path="ai-analyst" element={<AiAnalystPage />} />
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="auto-rules" element={<AutoRulesPage />} />
