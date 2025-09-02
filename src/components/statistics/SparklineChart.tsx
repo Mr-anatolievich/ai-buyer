@@ -1,4 +1,3 @@
-import { Sparklines, SparklinesLine, SparklinesSpots } from 'react-sparklines';
 import { cn } from '@/lib/utils';
 
 interface SparklineChartProps {
@@ -41,28 +40,46 @@ export function SparklineChart({
   // Визначаємо тренд
   const trend = validData.length >= 2 ? (validData[validData.length - 1] > validData[0] ? 'up' : 'down') : 'neutral';
 
+  // Нормалізуємо дані для відображення
+  const min = Math.min(...validData);
+  const max = Math.max(...validData);
+  const range = max - min || 1;
+
+  // Створюємо точки для SVG path
+  const points = validData.map((value, index) => {
+    const x = (index / (validData.length - 1)) * (width - 4) + 2;
+    const y = height - 2 - ((value - min) / range) * (height - 4);
+    return `${x},${y}`;
+  });
+
+  const pathData = `M ${points.join(' L ')}`;
+
   return (
     <div className={cn('sparkline-container inline-flex items-center gap-1', className)}>
-      <Sparklines data={validData} width={width} height={height} margin={2}>
-        <SparklinesLine
-          color={sparkColor}
-          style={{
-            strokeWidth: 1.5,
-            fill: 'none',
-          }}
+      <svg width={width} height={height} className="overflow-visible">
+        <path
+          d={pathData}
+          stroke={sparkColor}
+          strokeWidth={1.5}
+          fill="none"
+          vectorEffect="non-scaling-stroke"
         />
-        {showSpots && validData.length > 0 && (
-          <SparklinesSpots
-            style={{
-              fill: sparkColor,
-              fillOpacity: 0.8,
-              stroke: sparkColor,
-              strokeWidth: 1,
-            }}
-            size={2}
-          />
-        )}
-      </Sparklines>
+        {showSpots && validData.map((value, index) => {
+          const x = (index / (validData.length - 1)) * (width - 4) + 2;
+          const y = height - 2 - ((value - min) / range) * (height - 4);
+          return (
+            <circle
+              key={index}
+              cx={x}
+              cy={y}
+              r={1.5}
+              fill={sparkColor}
+              stroke={sparkColor}
+              strokeWidth={0.5}
+            />
+          );
+        })}
+      </svg>
       
       {/* Trend indicator */}
       <div className={cn(
