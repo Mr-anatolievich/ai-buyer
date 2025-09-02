@@ -18,6 +18,18 @@ export function SparklineChart({
   showSpots = false,
   className,
 }: SparklineChartProps) {
+  // Валідація та очищення даних
+  const validData = data && Array.isArray(data) && data.length > 0 
+    ? data.filter(d => typeof d === 'number' && !isNaN(d))
+    : [1, 1, 1]; // Fallback data
+
+  // Якщо немає валідних даних, показуємо простий індикатор
+  if (validData.length < 2) {
+    return (
+      <div className={cn('inline-block w-4 h-4 rounded-full bg-gray-300', className)} />
+    );
+  }
+
   const colors = {
     positive: '#10b981', // green-500
     negative: '#ef4444',  // red-500
@@ -27,11 +39,11 @@ export function SparklineChart({
   const sparkColor = colors[color];
 
   // Визначаємо тренд
-  const trend = data.length >= 2 ? (data[data.length - 1] > data[0] ? 'up' : 'down') : 'neutral';
+  const trend = validData.length >= 2 ? (validData[validData.length - 1] > validData[0] ? 'up' : 'down') : 'neutral';
 
   return (
     <div className={cn('sparkline-container inline-flex items-center gap-1', className)}>
-      <Sparklines data={data} width={width} height={height} margin={2}>
+      <Sparklines data={validData} width={width} height={height} margin={2}>
         <SparklinesLine
           color={sparkColor}
           style={{
@@ -39,7 +51,7 @@ export function SparklineChart({
             fill: 'none',
           }}
         />
-        {showSpots && (
+        {showSpots && validData.length > 0 && (
           <SparklinesSpots
             style={{
               fill: sparkColor,
