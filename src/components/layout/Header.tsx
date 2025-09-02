@@ -23,7 +23,7 @@ export function Header() {
           <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
             <Bot className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-lg">AI Ads Manager</span>
+          <span className="font-semibold text-lg">AI Buyer</span>
         </div>
       </div>
 
