@@ -16,6 +16,7 @@ import AutoRulesPage from "./pages/AutoRulesPage";
 import BillingsPage from "./pages/BillingsPage";
 import ConsolePage from "./pages/ConsolePage";
 import SettingsPage from "./pages/SettingsPage";
+import { FacebookTestPage } from "./pages/FacebookTestPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,8 +41,9 @@ const App = () => (
             <Route path="billings" element={<BillingsPage />} />
             <Route path="console" element={<ConsolePage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="facebook-test" element={<FacebookTestPage />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       </TooltipProvider>

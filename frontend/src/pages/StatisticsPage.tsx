@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { ArrowLeft, Play, Pause, Copy, X, Edit, TrendingUp, BarChart3, Zap } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Copy, X, Edit, TrendingUp, BarChart3, Zap, Settings } from 'lucide-react';
 import { StatisticsTable, CampaignData } from '@/components/statistics/StatisticsTable';
 import { StatisticsFilters, FilterState } from '@/components/statistics/StatisticsFilters';
 import { AiInsightsPanel } from '@/components/statistics/AiInsightsPanel';
+import { FacebookConfigForm } from '@/components/facebook/FacebookConfigForm';
+import { useFacebookApi, useFacebookCampaigns, useFacebookAdSets, useFacebookAds } from '@/hooks/useFacebookApi';
 import { useTranslations } from '@/lib/translations';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import type { FacebookConfig } from '@/services/facebookApi';
 
 type ViewLevel = 'campaign' | 'adset' | 'ad';
 
@@ -224,6 +228,14 @@ export default function StatisticsPage() {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [facebookConfig, setFacebookConfig] = useState<FacebookConfig | null>(null);
+  
+  // Facebook API hooks
+  const { apiService, isConfigured } = useFacebookApi(facebookConfig || undefined);
+  const { campaigns: facebookCampaigns, loading: campaignsLoading, error: campaignsError } = useFacebookCampaigns(apiService, isConfigured);
+  const { adSets: facebookAdSets, loading: adSetsLoading } = useFacebookAdSets(apiService, selectedCampaign || undefined, isConfigured && currentLevel === 'adset');
+  const { ads: facebookAds, loading: adsLoading } = useFacebookAds(apiService, selectedAdSet || undefined, isConfigured && currentLevel === 'ad');
   
   const [filters, setFilters] = useState<FilterState>({
     dateRange: {
@@ -243,16 +255,53 @@ export default function StatisticsPage() {
     { id: '2', name: 'Низька ефективність', filters: { ...filters, status: ['active'] } },
   ]);
 
-  // Get current data based on level
+  // Load saved config on mount
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('facebook_config');
+    if (savedConfig) {
+      try {
+        setFacebookConfig(JSON.parse(savedConfig));
+      } catch (err) {
+        console.error('Failed to parse saved Facebook config:', err);
+      }
+    }
+  }, []);
+
+  // Handle Facebook config save
+  const handleConfigSave = (config: FacebookConfig) => {
+    setFacebookConfig(config);
+    localStorage.setItem('facebook_config', JSON.stringify(config));
+    setShowConfigDialog(false);
+  };
+
+  // Get current data based on level and source
   const getCurrentData = (): CampaignData[] => {
-    if (currentLevel === 'campaign') {
-      return MOCK_CAMPAIGNS;
-    } else if (currentLevel === 'adset') {
-      return MOCK_ADSETS;
+    if (isConfigured) {
+      // Use Facebook data if configured
+      if (currentLevel === 'campaign') {
+        return facebookCampaigns;
+      } else if (currentLevel === 'adset') {
+        return facebookAdSets;
+      } else {
+        return facebookAds;
+      }
     } else {
-      return MOCK_ADS;
+      // Fallback to mock data
+      if (currentLevel === 'campaign') {
+        return MOCK_CAMPAIGNS;
+      } else if (currentLevel === 'adset') {
+        return MOCK_ADSETS;
+      } else {
+        return MOCK_ADS;
+      }
     }
   };
+
+  // Get loading state
+  const isLoading = isConfigured ? 
+    (currentLevel === 'campaign' ? campaignsLoading : 
+     currentLevel === 'adset' ? adSetsLoading : adsLoading) : 
+    loading;
 
   const handleRowClick = (row: CampaignData) => {
     if (currentLevel === 'campaign') {
@@ -380,6 +429,14 @@ export default function StatisticsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant="outline"
+              onClick={() => setShowConfigDialog(true)}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Facebook API
+            </Button>
+            <Button
               variant={showAiPanel ? "default" : "outline"}
               onClick={() => setShowAiPanel(!showAiPanel)}
               className="gap-2"
@@ -494,10 +551,17 @@ export default function StatisticsPage() {
           data={getCurrentData()}
           level={currentLevel}
           onRowClick={handleRowClick}
-          loading={loading}
+          loading={isLoading}
           selectedRows={selectedRows}
           onRowSelection={setSelectedRows}
         />
+        
+        {/* Show error if Facebook API fails */}
+        {campaignsError && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600">Помилка завантаження даних з Facebook: {campaignsError}</p>
+          </div>
+        )}
       </div>
 
       {/* AI Insights Panel */}
@@ -506,6 +570,19 @@ export default function StatisticsPage() {
           <AiInsightsPanel className="sticky top-6" />
         </div>
       )}
+
+      {/* Facebook Config Dialog */}
+      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Налаштування Facebook Marketing API</DialogTitle>
+          </DialogHeader>
+          <FacebookConfigForm 
+            onConfigSave={handleConfigSave}
+            initialConfig={facebookConfig || undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

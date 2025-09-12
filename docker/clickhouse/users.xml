@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <users>
+        <!-- Default user for AI-Buyer application -->
+        <default>
+            <password></password>
+            
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            
+            <profile>default</profile>
+            <quota>default</quota>
+            
+            <databases>
+                <database>ai_buyer</database>
+                <database>system</database>
+            </databases>
+            
+            <access_management>1</access_management>
+            <show_table_uuid_in_table_create_query_if_not_nil>1</show_table_uuid_in_table_create_query_if_not_nil>
+        </default>
+
+        <!-- Admin user for maintenance -->
+        <admin>
+            <password_sha256_hex>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</password_sha256_hex>
+            
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            
+            <profile>default</profile>
+            <quota>default</quota>
+            
+            <access_management>1</access_management>
+            <show_table_uuid_in_table_create_query_if_not_nil>1</show_table_uuid_in_table_create_query_if_not_nil>
+        </admin>
+
+        <!-- Read-only user for analytics -->
+        <analytics>
+            <password></password>
+            
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            
+            <profile>readonly</profile>
+            <quota>default</quota>
+            
+            <databases>
+                <database>ai_buyer</database>
+            </databases>
+        </analytics>
+    </users>
+
+    <quotas>
+        <default>
+            <interval>
+                <duration>3600</duration>
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </default>
+    </quotas>
+</clickhouse>

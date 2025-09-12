@@ -1,0 +1,171 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <logger>
+        <level>information</level>
+        <console>true</console>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
+    </logger>
+
+    <http_port>8123</http_port>
+    <tcp_port>9000</tcp_port>
+    <mysql_port>9004</mysql_port>
+    <postgresql_port>9005</postgresql_port>
+
+    <listen_host>::</listen_host>
+    <listen_host>0.0.0.0</listen_host>
+
+    <max_connections>200</max_connections>
+    <keep_alive_timeout>3</keep_alive_timeout>
+    <max_concurrent_queries>100</max_concurrent_queries>
+    <uncompressed_cache_size>8589934592</uncompressed_cache_size>
+    <mark_cache_size>5368709120</mark_cache_size>
+
+    <path>/var/lib/clickhouse/</path>
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+    <users_config>users.xml</users_config>
+
+    <!-- Performance optimizations for AI-Buyer analytics -->
+    <merge_tree>
+        <max_bytes_to_merge_at_max_space_in_pool>161061273600</max_bytes_to_merge_at_max_space_in_pool>
+        <max_replicated_merges_in_queue>16</max_replicated_merges_in_queue>
+        <number_of_free_entries_in_pool_to_lower_max_size_of_merge>8</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+        <max_number_of_merges_with_ttl_in_pool>2</max_number_of_merges_with_ttl_in_pool>
+    </merge_tree>
+
+    <!-- Memory settings -->
+    <max_memory_usage>10000000000</max_memory_usage>
+    <max_memory_usage_for_user>10000000000</max_memory_usage_for_user>
+    <max_server_memory_usage>0</max_server_memory_usage>
+
+    <!-- Query complexity limits -->
+    <max_query_size>268435456</max_query_size>
+    <max_parser_depth>1000</max_parser_depth>
+
+    <!-- Compression settings -->
+    <compression>
+        <case>
+            <method>zstd</method>
+            <level>1</level>
+        </case>
+    </compression>
+
+    <!-- Format schemas -->
+    <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
+
+    <!-- Kafka engine settings -->
+    <kafka>
+        <debug>cgrp,topic,fetch</debug>
+        <auto_offset_reset>smallest</auto_offset_reset>
+        <schema_registry_url>http://schema-registry:8081</schema_registry_url>
+    </kafka>
+
+    <!-- Access control -->
+    <access_control_path>/var/lib/clickhouse/access/</access_control_path>
+
+    <!-- Timezone -->
+    <timezone>UTC</timezone>
+
+    <!-- Default profile -->
+    <default_profile>default</default_profile>
+    <default_database>ai_buyer</default_database>
+
+    <!-- Include dictionaries config -->
+    <dictionaries_config>*_dictionary.xml</dictionaries_config>
+
+    <!-- Remote servers for distributed queries -->
+    <remote_servers>
+        <ai_buyer_cluster>
+            <shard>
+                <replica>
+                    <host>clickhouse</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </ai_buyer_cluster>
+    </remote_servers>
+
+    <!-- Background tasks -->
+    <background_pool_size>16</background_pool_size>
+    <background_merges_mutations_concurrency_ratio>2</background_merges_mutations_concurrency_ratio>
+    <background_schedule_pool_size>16</background_schedule_pool_size>
+    <background_distributed_schedule_pool_size>16</background_distributed_schedule_pool_size>
+
+    <!-- Settings for AI/ML workloads -->
+    <profiles>
+        <default>
+            <max_memory_usage>10000000000</max_memory_usage>
+            <use_uncompressed_cache>0</use_uncompressed_cache>
+            <load_balancing>in_order</load_balancing>
+            <log_queries>1</log_queries>
+            <log_query_threads>1</log_query_threads>
+            <max_insert_block_size>1048576</max_insert_block_size>
+            <max_query_size>268435456</max_query_size>
+            <interactive_delay>200000</interactive_delay>
+            <connect_timeout>10</connect_timeout>
+            <receive_timeout>300</receive_timeout>
+            <send_timeout>300</send_timeout>
+            <tcp_keep_alive_timeout>3</tcp_keep_alive_timeout>
+            <http_connection_timeout>2</http_connection_timeout>
+            <http_send_timeout>30</http_send_timeout>
+            <http_receive_timeout>30</http_receive_timeout>
+            <cancel_http_readonly_queries_on_client_close>1</cancel_http_readonly_queries_on_client_close>
+            <max_concurrent_queries_for_user>450</max_concurrent_queries_for_user>
+        </default>
+
+        <readonly>
+            <readonly>1</readonly>
+        </readonly>
+    </profiles>
+
+    <!-- Query log -->
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_log>
+
+    <!-- Query thread log -->
+    <query_thread_log>
+        <database>system</database>
+        <table>query_thread_log</table>
+        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_thread_log>
+
+    <!-- Part log -->
+    <part_log>
+        <database>system</database>
+        <table>part_log</table>
+        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </part_log>
+
+    <!-- Crash log -->
+    <crash_log>
+        <database>system</database>
+        <table>crash_log</table>
+        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <flush_interval_milliseconds>1000</flush_interval_milliseconds>
+    </crash_log>
+
+    <!-- Settings for machine learning and analytics -->
+    <max_table_size_to_drop>0</max_table_size_to_drop>
+    <max_partition_size_to_drop>0</max_partition_size_to_drop>
+
+    <!-- Distributed DDL -->
+    <distributed_ddl>
+        <path>/clickhouse/task_queue/ddl</path>
+    </distributed_ddl>
+
+    <!-- Include custom configurations -->
+    <include_from>/etc/clickhouse-server/config.d/*.xml</include_from>
+</clickhouse>
