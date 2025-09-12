@@ -1,340 +1,501 @@
 """
-Analytics routes
-Handles data analysis, reporting, and ML-powered insights
+Analytics API Routes for AI-Buyer
+Advanced analytics and insights from ClickHouse data
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
+from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
 import logging
+import pandas as pd
+import numpy as np
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Pydantic models for analytics
-class DateRange(BaseModel):
-    start_date: datetime = Field(..., description="Start date for analytics")
-    end_date: datetime = Field(..., description="End date for analytics") 
+# Response Models
+class MetricSummary(BaseModel):
+    metric_name: str
+    current_value: float
+    previous_value: float
+    change_percentage: float
+    trend: str  # "up", "down", "stable"
 
-class AnalyticsRequest(BaseModel):
-    user_id: str = Field(..., description="User ID")
-    campaign_ids: Optional[List[str]] = Field(None, description="Specific campaign IDs")
-    date_range: DateRange = Field(..., description="Date range for analysis")
-    metrics: List[str] = Field(["impressions", "clicks", "conversions", "spend"], description="Metrics to analyze")
-    group_by: str = Field("day", description="Grouping period: hour, day, week, month")
+class PerformanceMetrics(BaseModel):
+    period_start: datetime
+    period_end: datetime
+    total_spend: float
+    total_impressions: int
+    total_clicks: int
+    total_conversions: int
+    average_ctr: float
+    average_cpc: float
+    average_roas: float
+    cost_per_conversion: float
+
+class CampaignComparison(BaseModel):
+    campaign_id: str
+    campaign_name: str
+    metrics: PerformanceMetrics
+    ranking: int
+    performance_score: float
 
 class AnalyticsResponse(BaseModel):
-    user_id: str
-    date_range: DateRange
-    summary_metrics: Dict[str, float]
-    time_series_data: List[Dict[str, Any]]
+    summary: List[MetricSummary]
+    performance_metrics: PerformanceMetrics
+    top_campaigns: List[CampaignComparison]
     insights: List[str]
-    anomalies: List[Dict[str, Any]]
-    ml_recommendations: List[str]
+    generated_at: datetime
 
-@router.post("/")
-async def get_analytics_data(request: AnalyticsRequest) -> AnalyticsResponse:
-    """Get comprehensive analytics data with ML insights"""
-    try:
-        logger.info(f"Getting analytics for user {request.user_id}")
+class TimeSeriesData(BaseModel):
+    date: datetime
+    impressions: int
+    clicks: int
+    spend: float
+    conversions: int
+    ctr: float
+    cpc: float
+
+class TimeSeriesResponse(BaseModel):
+    campaign_id: Optional[str]
+    period_start: datetime
+    period_end: datetime
+    granularity: str  # "hourly", "daily", "weekly"
+    data_points: List[TimeSeriesData]
+    trends: Dict[str, Any]
+
+class AudienceInsights(BaseModel):
+    age_group: str
+    gender: str
+    device_type: str
+    performance_score: float
+    spend_share: float
+    conversion_rate: float
+    recommendations: List[str]
+
+class AudienceAnalyticsResponse(BaseModel):
+    total_audience_segments: int
+    top_performing_segments: List[AudienceInsights]
+    underperforming_segments: List[AudienceInsights]
+    optimization_opportunities: List[str]
+
+# Mock ClickHouse client for demonstration
+class ClickHouseAnalytics:
+    """Mock ClickHouse analytics client"""
+    
+    @staticmethod
+    def get_performance_summary(user_id: str, days: int = 30) -> Dict[str, Any]:
+        """Mock function для отримання загальної статистики"""
+        import random
         
-        # TODO: Query ClickHouse for actual data
-        # TODO: Apply ML models for anomaly detection and insights
+        # Generate mock aggregate data
+        total_spend = random.uniform(1000, 10000)
+        total_impressions = random.randint(50000, 500000)
+        total_clicks = random.randint(500, 25000)
+        total_conversions = random.randint(50, 1000)
         
-        # Mock analytics data
-        summary_metrics = {
-            "total_impressions": 125000,
-            "total_clicks": 4200,
-            "total_conversions": 248,
-            "total_spend": 1850.50,
-            "average_ctr": 0.0336,
-            "average_cpc": 0.44,
-            "average_conversion_rate": 0.059,
-            "roas": 3.2
+        return {
+            "total_spend": total_spend,
+            "total_impressions": total_impressions,
+            "total_clicks": total_clicks,
+            "total_conversions": total_conversions,
+            "average_ctr": (total_clicks / total_impressions * 100) if total_impressions > 0 else 0,
+            "average_cpc": (total_spend / total_clicks) if total_clicks > 0 else 0,
+            "average_roas": (total_conversions * 25 / total_spend) if total_spend > 0 else 0,
+            "cost_per_conversion": (total_spend / total_conversions) if total_conversions > 0 else 0
         }
+    
+    @staticmethod
+    def get_time_series(user_id: str, campaign_id: Optional[str], 
+                       start_date: datetime, end_date: datetime, 
+                       granularity: str = "daily") -> List[Dict]:
+        """Mock time series data"""
+        import random
+        import pandas as pd
         
-        # Generate mock time series data
-        time_series_data = []
-        start_date = request.date_range.start_date
-        end_date = request.date_range.end_date
-        current_date = start_date
+        freq_map = {"hourly": "H", "daily": "D", "weekly": "W"}
+        freq = freq_map.get(granularity, "D")
         
-        while current_date <= end_date:
-            daily_data = {
-                "date": current_date.isoformat(),
-                "impressions": 5000 + (current_date.weekday() * 500),  # Higher on weekends
-                "clicks": 170 + (current_date.weekday() * 20),
-                "conversions": 10 + (current_date.weekday() * 2),
-                "spend": 75.0 + (current_date.weekday() * 8.5),
-                "ctr": 0.034 + (current_date.weekday() * 0.002),
-                "cpc": 0.42 + (current_date.weekday() * 0.03)
-            }
-            time_series_data.append(daily_data)
-            current_date += timedelta(days=1)
+        date_range = pd.date_range(start=start_date, end=end_date, freq=freq)
         
-        # Mock ML insights
-        insights = [
-            "CTR performance is 15% above industry benchmark",
-            "Conversion rate peaks on Thursdays and Fridays",
-            "Mobile traffic shows 23% higher engagement than desktop",
-            "Video creatives outperform static images by 31%",
-            "Morning campaigns (8-10 AM) have lowest CPC"
-        ]
+        data_points = []
+        for date in date_range:
+            impressions = random.randint(1000, 10000)
+            clicks = random.randint(10, int(impressions * 0.05))
+            spend = random.uniform(50, 500)
+            conversions = random.randint(0, int(clicks * 0.1))
+            
+            data_points.append({
+                "date": date,
+                "impressions": impressions,
+                "clicks": clicks,
+                "spend": spend,
+                "conversions": conversions,
+                "ctr": (clicks / impressions * 100) if impressions > 0 else 0,
+                "cpc": (spend / clicks) if clicks > 0 else 0
+            })
         
-        # Mock anomaly detection
-        anomalies = [
-            {
-                "date": "2025-09-10",
-                "metric": "cpc",
-                "value": 0.89,
-                "expected": 0.44,
-                "severity": "high",
-                "description": "CPC spiked 102% above normal"
-            },
-            {
-                "date": "2025-09-08", 
-                "metric": "conversions",
-                "value": 45,
-                "expected": 12,
-                "severity": "positive",
-                "description": "Conversions exceeded forecast by 275%"
-            }
-        ]
+        return data_points
+    
+    @staticmethod
+    def get_campaign_rankings(user_id: str, metric: str = "roas", limit: int = 10) -> List[Dict]:
+        """Mock campaign performance ranking"""
+        import random
         
-        # Mock ML recommendations
-        ml_recommendations = [
-            "Increase budget allocation to mobile placements by 18%",
-            "Test new video creative formats during peak hours",
-            "Reduce spend on desktop campaigns during weekends",
-            "A/B test landing page variants for conversion optimization",
-            "Implement dynamic bidding strategy for time-of-day optimization"
-        ]
+        campaigns = []
+        for i in range(min(limit, 10)):
+            spend = random.uniform(100, 2000)
+            conversions = random.randint(5, 100)
+            roas = conversions * 25 / spend if spend > 0 else 0
+            
+            campaigns.append({
+                "campaign_id": f"fb_campaign_{i+1}",
+                "campaign_name": f"Campaign {i+1}",
+                "spend": spend,
+                "conversions": conversions,
+                "roas": roas,
+                "performance_score": random.uniform(0.6, 1.0)
+            })
+        
+        # Sort by the specified metric
+        if metric == "roas":
+            campaigns.sort(key=lambda x: x["roas"], reverse=True)
+        elif metric == "conversions":
+            campaigns.sort(key=lambda x: x["conversions"], reverse=True)
+        
+        # Add ranking
+        for idx, camp in enumerate(campaigns):
+            camp["ranking"] = idx + 1
+        
+        return campaigns
+
+# API Endpoints
+
+@router.get("/dashboard", response_model=AnalyticsResponse)
+async def get_dashboard_analytics(
+    user_id: str = Query(..., description="User ID"),
+    period_days: int = Query(30, ge=1, le=365, description="Analysis period in days"),
+    compare_previous: bool = Query(True, description="Compare with previous period")
+):
+    """
+    Отримати дашборд аналітики з ключовими метриками
+    """
+    try:
+        logger.info(f"Generating dashboard analytics for user {user_id}")
+        
+        # Get current period data
+        current_data = ClickHouseAnalytics.get_performance_summary(user_id, period_days)
+        
+        # Get previous period for comparison
+        previous_data = ClickHouseAnalytics.get_performance_summary(user_id, period_days) if compare_previous else None
+        
+        # Create metric summaries
+        summary = []
+        metrics_to_compare = ["total_spend", "total_clicks", "total_conversions", "average_ctr", "average_roas"]
+        
+        for metric in metrics_to_compare:
+            current_val = current_data.get(metric, 0)
+            previous_val = previous_data.get(metric, 0) if previous_data else current_val
+            
+            change_pct = ((current_val - previous_val) / previous_val * 100) if previous_val > 0 else 0
+            
+            if change_pct > 5:
+                trend = "up"
+            elif change_pct < -5:
+                trend = "down" 
+            else:
+                trend = "stable"
+            
+            summary.append(MetricSummary(
+                metric_name=metric.replace("_", " ").title(),
+                current_value=current_val,
+                previous_value=previous_val,
+                change_percentage=round(change_pct, 2),
+                trend=trend
+            ))
+        
+        # Create performance metrics
+        performance = PerformanceMetrics(
+            period_start=datetime.now() - timedelta(days=period_days),
+            period_end=datetime.now(),
+            total_spend=current_data["total_spend"],
+            total_impressions=current_data["total_impressions"],
+            total_clicks=current_data["total_clicks"],
+            total_conversions=current_data["total_conversions"],
+            average_ctr=current_data["average_ctr"],
+            average_cpc=current_data["average_cpc"],
+            average_roas=current_data["average_roas"],
+            cost_per_conversion=current_data["cost_per_conversion"]
+        )
+        
+        # Get top performing campaigns
+        top_campaigns_data = ClickHouseAnalytics.get_campaign_rankings(user_id, "roas", 5)
+        top_campaigns = []
+        
+        for camp_data in top_campaigns_data:
+            camp_performance = PerformanceMetrics(
+                period_start=datetime.now() - timedelta(days=period_days),
+                period_end=datetime.now(),
+                total_spend=camp_data["spend"],
+                total_impressions=0,  # Mock data doesn't have this
+                total_clicks=0,
+                total_conversions=camp_data["conversions"],
+                average_ctr=0,
+                average_cpc=0,
+                average_roas=camp_data["roas"],
+                cost_per_conversion=camp_data["spend"] / camp_data["conversions"] if camp_data["conversions"] > 0 else 0
+            )
+            
+            top_campaigns.append(CampaignComparison(
+                campaign_id=camp_data["campaign_id"],
+                campaign_name=camp_data["campaign_name"],
+                metrics=camp_performance,
+                ranking=camp_data["ranking"],
+                performance_score=camp_data["performance_score"]
+            ))
+        
+        # Generate insights
+        insights = []
+        if current_data["average_ctr"] > 2.0:
+            insights.append("Відмінний CTR! Ваші креативи резонують з аудиторією")
+        if current_data["average_roas"] < 2.0:
+            insights.append("ROAS нижче рекомендованого - розгляньте оптимізацію таргетингу")
+        if current_data["cost_per_conversion"] > 50:
+            insights.append("Висока вартість конверсії - можливо варто протестувати нові аудиторії")
+        
+        if not insights:
+            insights.append("Кампанії показують стабільні результати")
         
         return AnalyticsResponse(
-            user_id=request.user_id,
-            date_range=request.date_range,
-            summary_metrics=summary_metrics,
-            time_series_data=time_series_data,
+            summary=summary,
+            performance_metrics=performance,
+            top_campaigns=top_campaigns,
             insights=insights,
-            anomalies=anomalies,
-            ml_recommendations=ml_recommendations
+            generated_at=datetime.now()
         )
         
     except Exception as e:
-        logger.error(f"Error getting analytics for user {request.user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Analytics failed: {str(e)}")
+        logger.error(f"Dashboard analytics failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/dashboard/{user_id}")
-async def get_dashboard_data(
-    user_id: str,
-    days: int = Query(7, description="Number of days of data")
+@router.get("/time-series", response_model=TimeSeriesResponse)
+async def get_time_series_data(
+    user_id: str = Query(..., description="User ID"),
+    start_date: datetime = Query(..., description="Start date"),
+    end_date: datetime = Query(..., description="End date"),
+    campaign_id: Optional[str] = Query(None, description="Specific campaign ID"),
+    granularity: str = Query("daily", regex="^(hourly|daily|weekly)$")
 ):
-    """Get dashboard data optimized for real-time display"""
+    """
+    Отримати часові ряди метрик для графіків
+    """
     try:
-        logger.info(f"Getting dashboard data for user {user_id}")
+        logger.info(f"Getting time series data for user {user_id}")
         
-        # TODO: Implement real-time dashboard data from Redis cache
+        # Get time series data
+        raw_data = ClickHouseAnalytics.get_time_series(
+            user_id, campaign_id, start_date, end_date, granularity
+        )
         
-        dashboard_data = {
-            "user_id": user_id,
-            "period_days": days,
-            "real_time_metrics": {
-                "active_campaigns": 8,
-                "total_spend_today": 245.67,
-                "conversions_today": 23,
-                "current_roas": 3.1,
-                "spend_vs_budget": 0.67  # 67% of daily budget used
-            },
-            "performance_trends": {
-                "ctr_trend": "increasing",
-                "cpc_trend": "stable", 
-                "conversion_trend": "increasing",
-                "spend_trend": "controlled"
-            },
-            "alerts": [
-                {
-                    "type": "opportunity",
-                    "message": "Campaign 'Holiday Sale' performing 25% above target",
-                    "action": "Consider increasing budget"
-                },
-                {
-                    "type": "warning",
-                    "message": "Campaign 'Brand Awareness' CPC increased by 15%",
-                    "action": "Review targeting settings"
-                }
-            ],
-            "top_performing_campaigns": [
-                {
-                    "campaign_id": "camp_001",
-                    "name": "Holiday Sale Campaign",
-                    "roas": 4.2,
-                    "conversions": 45,
-                    "improvement": "+23%"
-                },
-                {
-                    "campaign_id": "camp_003",
-                    "name": "Retargeting Campaign", 
-                    "roas": 3.8,
-                    "conversions": 32,
-                    "improvement": "+18%"
-                }
-            ],
-            "ml_optimization_status": {
-                "budget_optimization": "active",
-                "bid_optimization": "active", 
-                "audience_optimization": "pending",
-                "creative_optimization": "inactive"
-            },
-            "updated_at": datetime.now().isoformat()
-        }
+        # Convert to response format
+        data_points = [
+            TimeSeriesData(
+                date=point["date"],
+                impressions=point["impressions"],
+                clicks=point["clicks"],
+                spend=point["spend"],
+                conversions=point["conversions"],
+                ctr=point["ctr"],
+                cpc=point["cpc"]
+            )
+            for point in raw_data
+        ]
         
-        return dashboard_data
-        
-    except Exception as e:
-        logger.error(f"Error getting dashboard data for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Dashboard data failed: {str(e)}")
-
-@router.get("/reports/{user_id}")
-async def generate_analytics_report(
-    user_id: str,
-    report_type: str = Query("weekly", description="Report type: daily, weekly, monthly"),
-    format: str = Query("json", description="Report format: json, pdf, csv")
-):
-    """Generate comprehensive analytics reports"""
-    try:
-        logger.info(f"Generating {report_type} report for user {user_id}")
-        
-        # TODO: Generate actual reports using ML insights
-        
-        if format == "json":
-            report = {
-                "user_id": user_id,
-                "report_type": report_type,
-                "generated_at": datetime.now().isoformat(),
-                "executive_summary": {
-                    "total_campaigns": 12,
-                    "total_spend": 5420.30,
-                    "total_conversions": 324,
-                    "average_roas": 3.2,
-                    "period_performance": "Exceeded targets by 12%"
-                },
-                "key_insights": [
-                    "Mobile traffic conversion rate improved by 28%",
-                    "Video creatives show 35% higher engagement",
-                    "Weekend campaigns have 20% lower CPC",
-                    "Retargeting campaigns deliver highest ROAS at 4.1x"
-                ],
-                "campaign_performance": [
-                    {
-                        "campaign_name": "Holiday Sale",
-                        "spend": 1250.00,
-                        "conversions": 89,
-                        "roas": 4.2,
-                        "status": "Outperforming"
-                    },
-                    {
-                        "campaign_name": "Brand Awareness",
-                        "spend": 890.50,
-                        "conversions": 45,
-                        "roas": 2.8,
-                        "status": "Needs optimization"
-                    }
-                ],
-                "recommendations": [
-                    "Increase budget for mobile video campaigns by 25%",
-                    "Pause underperforming desktop campaigns",
-                    "Test new audience segments for brand awareness",
-                    "Implement automated bidding for conversion optimization"
-                ],
-                "ml_optimization_impact": {
-                    "budget_optimization_savings": 8.5,  # percentage
-                    "ctr_improvement": 15.2,
-                    "conversion_rate_improvement": 22.1,
-                    "overall_roas_improvement": 18.7
-                }
-            }
+        # Calculate trends
+        if len(data_points) >= 2:
+            # Simple linear trend calculation
+            dates = [i for i in range(len(data_points))]
             
-            return report
+            trends = {}
+            for metric in ["impressions", "clicks", "spend", "conversions"]:
+                values = [getattr(dp, metric) for dp in data_points]
+                if len(values) >= 2:
+                    slope = np.polyfit(dates, values, 1)[0]
+                    trends[metric] = {
+                        "direction": "increasing" if slope > 0 else "decreasing",
+                        "slope": float(slope)
+                    }
         else:
-            # TODO: Implement PDF and CSV report generation
-            return {
-                "message": f"Report generation for format '{format}' is not yet implemented",
-                "available_formats": ["json"],
-                "user_id": user_id
-            }
+            trends = {}
+        
+        return TimeSeriesResponse(
+            campaign_id=campaign_id,
+            period_start=start_date,
+            period_end=end_date,
+            granularity=granularity,
+            data_points=data_points,
+            trends=trends
+        )
         
     except Exception as e:
-        logger.error(f"Error generating report for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
+        logger.error(f"Time series data failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/anomalies/{user_id}")
-async def detect_anomalies(
-    user_id: str,
-    days: int = Query(7, description="Number of days to analyze"),
-    sensitivity: float = Query(0.8, description="Anomaly detection sensitivity (0.0-1.0)")
+@router.get("/audience-insights", response_model=AudienceAnalyticsResponse)
+async def get_audience_insights(
+    user_id: str = Query(..., description="User ID"),
+    period_days: int = Query(30, ge=1, le=365)
 ):
-    """Detect anomalies in campaign performance using ML"""
+    """
+    Отримати інсайти по аудиторіям
+    """
     try:
-        logger.info(f"Detecting anomalies for user {user_id}")
+        logger.info(f"Generating audience insights for user {user_id}")
         
-        # TODO: Implement actual anomaly detection using isolation forest or similar
-        
-        anomalies = [
+        # Mock audience data
+        audience_segments = [
             {
-                "campaign_id": "camp_001",
-                "campaign_name": "Holiday Sale",
-                "anomaly_type": "cpc_spike",
-                "detected_at": "2025-09-11T14:30:00Z",
-                "metric": "cpc",
-                "current_value": 0.89,
-                "expected_value": 0.45,
-                "deviation_percentage": 97.8,
-                "severity": "high",
-                "likely_causes": [
-                    "Increased competition in auction",
-                    "Audience overlap with other campaigns",
-                    "Ad quality score decreased"
-                ],
-                "suggested_actions": [
-                    "Review targeting settings",
-                    "Pause overlapping campaigns",
-                    "Update ad creatives"
-                ]
+                "age_group": "18-24",
+                "gender": "female",
+                "device_type": "mobile",
+                "performance_score": 0.85,
+                "spend_share": 0.25,
+                "conversion_rate": 3.2
             },
             {
-                "campaign_id": "camp_003",
-                "campaign_name": "Retargeting",
-                "anomaly_type": "conversion_drop",
-                "detected_at": "2025-09-10T09:15:00Z",
-                "metric": "conversion_rate",
-                "current_value": 0.023,
-                "expected_value": 0.058,
-                "deviation_percentage": -60.3,
-                "severity": "medium",
-                "likely_causes": [
-                    "Landing page performance issues",
-                    "Audience fatigue",
-                    "Seasonal trends"
-                ],
-                "suggested_actions": [
-                    "Check landing page load times",
-                    "Refresh ad creatives",
-                    "Expand audience targeting"
-                ]
+                "age_group": "25-34", 
+                "gender": "male",
+                "device_type": "desktop",
+                "performance_score": 0.92,
+                "spend_share": 0.35,
+                "conversion_rate": 4.1
+            },
+            {
+                "age_group": "35-44",
+                "gender": "female",
+                "device_type": "mobile",
+                "performance_score": 0.78,
+                "spend_share": 0.20,
+                "conversion_rate": 2.8
+            },
+            {
+                "age_group": "45-54",
+                "gender": "male", 
+                "device_type": "tablet",
+                "performance_score": 0.45,
+                "spend_share": 0.20,
+                "conversion_rate": 1.2
             }
         ]
         
+        # Sort by performance
+        audience_segments.sort(key=lambda x: x["performance_score"], reverse=True)
+        
+        # Create insights
+        top_performing = []
+        underperforming = []
+        
+        for segment in audience_segments:
+            recommendations = []
+            if segment["performance_score"] > 0.8:
+                recommendations.append("Збільшити бюджет для цього сегменту")
+                recommendations.append("Створити схожу аудиторію")
+            elif segment["performance_score"] < 0.6:
+                recommendations.append("Переглянути креативи для цього сегменту")
+                recommendations.append("Тестувати альтернативні стратегії")
+            
+            insight = AudienceInsights(
+                age_group=segment["age_group"],
+                gender=segment["gender"],
+                device_type=segment["device_type"],
+                performance_score=segment["performance_score"],
+                spend_share=segment["spend_share"],
+                conversion_rate=segment["conversion_rate"],
+                recommendations=recommendations
+            )
+            
+            if segment["performance_score"] > 0.7:
+                top_performing.append(insight)
+            elif segment["performance_score"] < 0.6:
+                underperforming.append(insight)
+        
+        # Generate optimization opportunities
+        opportunities = []
+        if top_performing:
+            opportunities.append("Збільшити бюджет на топ-аудиторії на 20-30%")
+        if underperforming:
+            opportunities.append("Оптимізувати або призупинити слабкі сегменти")
+        if len([s for s in audience_segments if s["device_type"] == "mobile"]) > len([s for s in audience_segments if s["device_type"] == "desktop"]):
+            opportunities.append("Створити mobile-first креативи")
+        
+        return AudienceAnalyticsResponse(
+            total_audience_segments=len(audience_segments),
+            top_performing_segments=top_performing,
+            underperforming_segments=underperforming,
+            optimization_opportunities=opportunities
+        )
+        
+    except Exception as e:
+        logger.error(f"Audience insights failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/anomaly-detection")
+async def detect_anomalies(
+    user_id: str = Query(..., description="User ID"),
+    campaign_id: Optional[str] = Query(None, description="Specific campaign"),
+    sensitivity: float = Query(0.8, ge=0.1, le=1.0, description="Sensitivity level")
+):
+    """
+    Виявлення аномалій у рекламних кампаніях
+    """
+    try:
+        logger.info(f"Running anomaly detection for user {user_id}")
+        
+        # Mock anomaly detection results
+        import random
+        
+        anomalies = []
+        
+        # Generate some mock anomalies
+        if random.choice([True, False]):
+            anomalies.append({
+                "campaign_id": campaign_id or "fb_campaign_1",
+                "metric": "ctr",
+                "anomaly_type": "drop",
+                "severity": "high",
+                "current_value": 0.8,
+                "expected_value": 2.1,
+                "deviation_percentage": -62,
+                "detected_at": datetime.now().isoformat(),
+                "description": "Значне падіння CTR - можлива втома креативу",
+                "recommended_action": "Оновити креативи або змінити аудиторію"
+            })
+        
+        if random.choice([True, False]):
+            anomalies.append({
+                "campaign_id": campaign_id or "fb_campaign_2", 
+                "metric": "cpc",
+                "anomaly_type": "spike",
+                "severity": "medium",
+                "current_value": 3.2,
+                "expected_value": 1.8,
+                "deviation_percentage": 78,
+                "detected_at": datetime.now().isoformat(),
+                "description": "Різке зростання вартості кліку",
+                "recommended_action": "Перевірити конкуренцію і налаштування ставок"
+            })
+        
         return {
             "user_id": user_id,
-            "analysis_period_days": days,
-            "sensitivity_level": sensitivity,
-            "anomalies_detected": len(anomalies),
+            "campaign_id": campaign_id,
+            "total_anomalies": len(anomalies),
             "anomalies": anomalies,
-            "detection_model": "isolation_forest_v1.2",
-            "analysis_completed_at": datetime.now().isoformat()
+            "detection_sensitivity": sensitivity,
+            "analyzed_at": datetime.now().isoformat(),
+            "status": "completed"
         }
         
     except Exception as e:
-        logger.error(f"Error detecting anomalies for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
+        logger.error(f"Anomaly detection failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

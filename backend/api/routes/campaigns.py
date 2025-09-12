@@ -1,215 +1,325 @@
 """
-Campaign management routes
-Handles Facebook campaign operations and ML optimization
+Campaigns API Routes for AI-Buyer
+Handles Facebook campaign data integration and management
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
+from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Pydantic models for request/response validation
+# Request/Response Models
 class CampaignData(BaseModel):
     campaign_id: str = Field(..., description="Facebook Campaign ID")
-    campaign_name: str = Field(..., description="Campaign name")
-    budget: float = Field(..., description="Campaign budget")
-    status: str = Field(..., description="Campaign status")
-    objective: str = Field(..., description="Campaign objective")
-    impressions: Optional[int] = Field(None, description="Total impressions")
-    clicks: Optional[int] = Field(None, description="Total clicks")
-    spend: Optional[float] = Field(None, description="Total spend")
-    conversions: Optional[int] = Field(None, description="Total conversions")
+    campaign_name: str = Field(..., description="Campaign Name")
+    objective: str = Field(..., description="Campaign Objective")
+    status: str = Field(..., description="Campaign Status")
+    daily_budget: float = Field(..., gt=0, description="Daily Budget")
+    lifetime_budget: Optional[float] = Field(None, description="Lifetime Budget")
+    start_date: datetime = Field(..., description="Campaign Start Date")
+    end_date: Optional[datetime] = Field(None, description="Campaign End Date")
 
-class CampaignOptimizationRequest(BaseModel):
-    user_id: str = Field(..., description="User ID")
-    campaigns: List[CampaignData] = Field(..., description="List of campaigns to optimize")
-    total_budget: float = Field(..., description="Total budget to distribute")
-    optimization_goal: str = Field("ROAS", description="Optimization goal (ROAS, CTR, Conversions)")
-
-class BudgetRecommendation(BaseModel):
+class CampaignMetrics(BaseModel):
     campaign_id: str
-    campaign_name: str
-    current_budget: float
-    recommended_budget: float
-    change_percentage: float
-    predicted_improvement: Dict[str, float]
+    date: datetime
+    impressions: int = Field(ge=0)
+    clicks: int = Field(ge=0) 
+    spend: float = Field(ge=0)
+    conversions: int = Field(ge=0)
+    ctr: float = Field(ge=0)
+    cpc: float = Field(ge=0)
+    cost_per_conversion: Optional[float] = None
+    roas: Optional[float] = None
 
-class OptimizationResponse(BaseModel):
-    user_id: str
-    total_budget: float
-    recommendations: List[BudgetRecommendation]
-    expected_improvement: Dict[str, float]
-    confidence_score: float
+class CampaignListResponse(BaseModel):
+    campaigns: List[CampaignData]
+    total_count: int
+    page: int
+    page_size: int
 
-@router.get("/user/{user_id}")
-async def get_user_campaigns(user_id: str):
-    """Get all campaigns for a specific user"""
+class CampaignPerformanceResponse(BaseModel):
+    campaign_id: str
+    metrics: List[CampaignMetrics]
+    summary: Dict[str, Any]
+    recommendations: List[str]
+
+# Mock Facebook API integration
+class FacebookAPIClient:
+    """Mock Facebook Marketing API client"""
+    
+    @staticmethod
+    def get_campaigns(user_access_token: str, limit: int = 50) -> List[Dict]:
+        """Mock function - в реальності використовувати facebook-business SDK"""
+        # Mock data для демонстрації
+        import random
+        from datetime import datetime, timedelta
+        
+        campaigns = []
+        for i in range(min(limit, 10)):
+            campaigns.append({
+                "id": f"fb_campaign_{i+1}",
+                "name": f"Facebook Campaign {i+1}",
+                "objective": random.choice(["CONVERSIONS", "TRAFFIC", "AWARENESS"]),
+                "status": random.choice(["ACTIVE", "PAUSED", "ARCHIVED"]),
+                "daily_budget": random.randint(50, 500),
+                "lifetime_budget": random.randint(1000, 10000) if random.choice([True, False]) else None,
+                "start_time": (datetime.now() - timedelta(days=random.randint(1, 90))).isoformat(),
+                "end_time": (datetime.now() + timedelta(days=random.randint(1, 30))).isoformat() if random.choice([True, False]) else None,
+                "effective_status": "ACTIVE",
+                "created_time": (datetime.now() - timedelta(days=random.randint(1, 180))).isoformat()
+            })
+        
+        return campaigns
+    
+    @staticmethod
+    def get_campaign_insights(campaign_id: str, date_preset: str = "last_30d") -> List[Dict]:
+        """Mock function для отримання метрик кампанії"""
+        import random
+        import pandas as pd
+        
+        # Generate mock insights data
+        date_range = pd.date_range(
+            start=datetime.now() - timedelta(days=30),
+            end=datetime.now(),
+            freq='D'
+        )
+        
+        insights = []
+        for date in date_range:
+            impressions = random.randint(1000, 50000)
+            clicks = random.randint(10, int(impressions * 0.05))  # CTR до 5%
+            spend = random.uniform(20, 500)
+            conversions = random.randint(0, int(clicks * 0.1))  # Конверсія до 10%
+            
+            insights.append({
+                "date_start": date.date().isoformat(),
+                "date_stop": date.date().isoformat(),
+                "impressions": impressions,
+                "clicks": clicks,
+                "spend": round(spend, 2),
+                "conversions": conversions,
+                "ctr": round(clicks / impressions * 100, 4) if impressions > 0 else 0,
+                "cpc": round(spend / clicks, 2) if clicks > 0 else 0,
+                "cost_per_conversion": round(spend / conversions, 2) if conversions > 0 else None,
+                "roas": round(conversions * 25 / spend, 2) if spend > 0 else None  # Припущення $25 за конверсію
+            })
+        
+        return insights
+
+# API Endpoints
+
+@router.get("/", response_model=CampaignListResponse)
+async def get_campaigns(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(50, ge=1, le=100, description="Items per page"),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    user_access_token: str = Query(..., description="Facebook User Access Token")
+):
+    """
+    Отримати список Facebook кампаній користувача
+    """
     try:
-        # TODO: Implement actual Facebook API integration
-        # For now, return mock data
-        mock_campaigns = [
+        logger.info(f"Fetching campaigns - page: {page}, size: {page_size}")
+        
+        # Get campaigns from Facebook API
+        fb_campaigns = FacebookAPIClient.get_campaigns(
+            user_access_token=user_access_token,
+            limit=page_size
+        )
+        
+        # Convert to our format
+        campaigns = []
+        for fb_camp in fb_campaigns:
+            # Filter by status if provided
+            if status and fb_camp.get("effective_status") != status:
+                continue
+                
+            campaign = CampaignData(
+                campaign_id=fb_camp["id"],
+                campaign_name=fb_camp["name"],
+                objective=fb_camp["objective"],
+                status=fb_camp["effective_status"],
+                daily_budget=float(fb_camp.get("daily_budget", 0)),
+                lifetime_budget=float(fb_camp["lifetime_budget"]) if fb_camp.get("lifetime_budget") else None,
+                start_date=datetime.fromisoformat(fb_camp["start_time"].replace("Z", "+00:00")),
+                end_date=datetime.fromisoformat(fb_camp["end_time"].replace("Z", "+00:00")) if fb_camp.get("end_time") else None
+            )
+            campaigns.append(campaign)
+        
+        return CampaignListResponse(
+            campaigns=campaigns,
+            total_count=len(campaigns),
+            page=page,
+            page_size=page_size
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching campaigns: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch campaigns: {str(e)}")
+
+@router.get("/{campaign_id}/performance", response_model=CampaignPerformanceResponse)
+async def get_campaign_performance(
+    campaign_id: str,
+    date_preset: str = Query("last_30d", description="Date preset for insights"),
+    user_access_token: str = Query(..., description="Facebook User Access Token")
+):
+    """
+    Отримати метрики продуктивності кампанії
+    """
+    try:
+        logger.info(f"Fetching performance for campaign {campaign_id}")
+        
+        # Get insights from Facebook API
+        insights = FacebookAPIClient.get_campaign_insights(
+            campaign_id=campaign_id,
+            date_preset=date_preset
+        )
+        
+        # Convert to our format
+        metrics = []
+        total_impressions = 0
+        total_clicks = 0
+        total_spend = 0
+        total_conversions = 0
+        
+        for insight in insights:
+            metric = CampaignMetrics(
+                campaign_id=campaign_id,
+                date=datetime.fromisoformat(insight["date_start"]),
+                impressions=insight["impressions"],
+                clicks=insight["clicks"],
+                spend=insight["spend"],
+                conversions=insight["conversions"],
+                ctr=insight["ctr"],
+                cpc=insight["cpc"],
+                cost_per_conversion=insight.get("cost_per_conversion"),
+                roas=insight.get("roas")
+            )
+            metrics.append(metric)
+            
+            # Accumulate totals
+            total_impressions += insight["impressions"]
+            total_clicks += insight["clicks"]
+            total_spend += insight["spend"]
+            total_conversions += insight["conversions"]
+        
+        # Calculate summary metrics
+        avg_ctr = (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
+        avg_cpc = (total_spend / total_clicks) if total_clicks > 0 else 0
+        avg_cost_per_conversion = (total_spend / total_conversions) if total_conversions > 0 else 0
+        
+        summary = {
+            "total_impressions": total_impressions,
+            "total_clicks": total_clicks,
+            "total_spend": round(total_spend, 2),
+            "total_conversions": total_conversions,
+            "average_ctr": round(avg_ctr, 4),
+            "average_cpc": round(avg_cpc, 2),
+            "average_cost_per_conversion": round(avg_cost_per_conversion, 2) if total_conversions > 0 else None,
+            "period_days": len(metrics)
+        }
+        
+        # Generate recommendations
+        recommendations = []
+        if avg_ctr < 1.0:
+            recommendations.append("CTR нижче середнього - розгляньте оновлення креативів")
+        if avg_cpc > 2.0:
+            recommendations.append("Висока вартість кліку - оптимізуйте таргетинг аудиторії")
+        if total_conversions == 0:
+            recommendations.append("Відсутні конверсії - перевірте налаштування пікселя і воронку")
+        if not recommendations:
+            recommendations.append("Кампанія показує хороші результати!")
+        
+        return CampaignPerformanceResponse(
+            campaign_id=campaign_id,
+            metrics=metrics,
+            summary=summary,
+            recommendations=recommendations
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching performance for campaign {campaign_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch performance: {str(e)}")
+
+@router.post("/{campaign_id}/sync")
+async def sync_campaign_data(
+    campaign_id: str,
+    user_access_token: str = Query(..., description="Facebook User Access Token")
+):
+    """
+    Синхронізувати дані кампанії з ClickHouse для ML аналізу
+    """
+    try:
+        logger.info(f"Syncing campaign {campaign_id} data to ClickHouse")
+        
+        # Get fresh data from Facebook
+        insights = FacebookAPIClient.get_campaign_insights(campaign_id)
+        
+        # TODO: Save to ClickHouse
+        # В реальному проекті тут буде код для збереження в ClickHouse
+        # from ..database.clickhouse_client import ClickHouseClient
+        # clickhouse = ClickHouseClient()
+        # clickhouse.insert_campaign_metrics(insights)
+        
+        return {
+            "campaign_id": campaign_id,
+            "sync_status": "success",
+            "records_synced": len(insights),
+            "synced_at": datetime.now().isoformat(),
+            "message": "Campaign data synchronized successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error syncing campaign {campaign_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+@router.get("/{campaign_id}/recommendations")
+async def get_campaign_recommendations(campaign_id: str):
+    """
+    Отримати AI-рекомендації для оптимізації кампанії
+    """
+    try:
+        # TODO: Integrate with ML models for real recommendations
+        # В реальному проекті використовувати навчені ML моделі
+        
+        recommendations = [
             {
-                "campaign_id": f"camp_{user_id}_1",
-                "campaign_name": "Holiday Sale Campaign",
-                "budget": 1000.0,
-                "status": "ACTIVE",
-                "objective": "CONVERSIONS",
-                "impressions": 15000,
-                "clicks": 750,
-                "spend": 250.0,
-                "conversions": 45
+                "type": "budget",
+                "priority": "high",
+                "title": "Оптимізація бюджету",
+                "description": "Рекомендуємо перерозподілити 15% бюджету на більш ефективні час і аудиторії",
+                "expected_improvement": "12% збільшення конверсій",
+                "action": "Збільшити ставки у вечірній час (18:00-22:00)"
             },
             {
-                "campaign_id": f"camp_{user_id}_2", 
-                "campaign_name": "Brand Awareness Campaign",
-                "budget": 800.0,
-                "status": "ACTIVE",
-                "objective": "REACH",
-                "impressions": 25000,
-                "clicks": 500,
-                "spend": 200.0,
-                "conversions": 20
+                "type": "creative",
+                "priority": "medium", 
+                "title": "Оновлення креативів",
+                "description": "Поточні креативи показують ознаки втоми аудиторії",
+                "expected_improvement": "8% покращення CTR",
+                "action": "Додати нові зображення або відео"
+            },
+            {
+                "type": "audience",
+                "priority": "low",
+                "title": "Розширення аудиторії",
+                "description": "Lookalike аудиторії можуть принести додаткові конверсії",
+                "expected_improvement": "5% збільшення охоплення",
+                "action": "Створити Lookalike 1-3% від конвертованих користувачів"
             }
         ]
         
         return {
-            "user_id": user_id,
-            "campaigns": mock_campaigns,
-            "total_active_campaigns": len(mock_campaigns)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching campaigns for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch campaigns: {str(e)}")
-
-@router.post("/optimize")
-async def optimize_campaign_budgets(
-    request: CampaignOptimizationRequest,
-    background_tasks: BackgroundTasks
-) -> OptimizationResponse:
-    """Optimize budget allocation across campaigns using ML models"""
-    try:
-        logger.info(f"Optimizing budgets for user {request.user_id}")
-        
-        # TODO: Implement actual ML optimization using Prophet and optimization algorithms
-        # For now, return mock optimization results
-        
-        recommendations = []
-        for campaign in request.campaigns:
-            # Mock optimization logic
-            current_budget = campaign.budget
-            # Simple heuristic: increase budget for high-performing campaigns
-            performance_score = 0.0
-            if campaign.impressions and campaign.clicks and campaign.spend:
-                ctr = campaign.clicks / campaign.impressions
-                cpc = campaign.spend / campaign.clicks if campaign.clicks > 0 else 0
-                performance_score = ctr * 1000 - cpc  # Simple scoring
-            
-            budget_multiplier = 1.0 + (performance_score * 0.1)
-            budget_multiplier = max(0.5, min(2.0, budget_multiplier))  # Limit to 50%-200%
-            
-            recommended_budget = current_budget * budget_multiplier
-            
-            recommendations.append(BudgetRecommendation(
-                campaign_id=campaign.campaign_id,
-                campaign_name=campaign.campaign_name,
-                current_budget=current_budget,
-                recommended_budget=round(recommended_budget, 2),
-                change_percentage=round((recommended_budget - current_budget) / current_budget * 100, 2),
-                predicted_improvement={
-                    "ctr_increase": round(performance_score * 2, 2),
-                    "conversion_increase": round(performance_score * 1.5, 2),
-                    "roas_improvement": round(performance_score * 3, 2)
-                }
-            ))
-        
-        # Add background task for model retraining
-        background_tasks.add_task(log_optimization_request, request.user_id, request.campaigns)
-        
-        return OptimizationResponse(
-            user_id=request.user_id,
-            total_budget=request.total_budget,
-            recommendations=recommendations,
-            expected_improvement={
-                "total_conversions": 15.5,
-                "total_roas": 8.3,
-                "cost_efficiency": 12.1
-            },
-            confidence_score=0.87
-        )
-        
-    except Exception as e:
-        logger.error(f"Error optimizing campaigns for user {request.user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
-
-@router.post("/sync/{user_id}")
-async def sync_facebook_campaigns(user_id: str, background_tasks: BackgroundTasks):
-    """Sync campaigns from Facebook API and trigger ML pipeline"""
-    try:
-        logger.info(f"Syncing Facebook campaigns for user {user_id}")
-        
-        # Add background task for Facebook API sync
-        background_tasks.add_task(sync_facebook_data_task, user_id)
-        
-        return {
-            "status": "sync_initiated",
-            "user_id": user_id,
-            "message": "Facebook campaign sync started in background"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error initiating sync for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
-
-@router.get("/{campaign_id}/insights")
-async def get_campaign_insights(campaign_id: str, days: int = 7):
-    """Get ML-powered insights for a specific campaign"""
-    try:
-        # TODO: Implement actual insights using ML models
-        mock_insights = {
             "campaign_id": campaign_id,
-            "analysis_period_days": days,
-            "performance_trend": "improving",
-            "key_insights": [
-                "CTR increased by 15% in the last 3 days",
-                "Weekend performance is 23% better than weekdays",
-                "Mobile audience shows 2x higher conversion rate"
-            ],
-            "recommendations": [
-                "Increase budget by 20% for mobile placements",
-                "Pause campaign during weekday mornings (low performance)",
-                "A/B test new creative formats"
-            ],
-            "predicted_metrics": {
-                "next_7_days_spend": 450.0,
-                "next_7_days_conversions": 68,
-                "predicted_ctr": 0.052,
-                "predicted_roas": 3.2
-            }
+            "recommendations": recommendations,
+            "total_recommendations": len(recommendations),
+            "generated_at": datetime.now().isoformat()
         }
         
-        return mock_insights
-        
     except Exception as e:
-        logger.error(f"Error getting insights for campaign {campaign_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get insights: {str(e)}")
-
-# Background task functions
-async def log_optimization_request(user_id: str, campaigns: List[CampaignData]):
-    """Background task to log optimization requests for ML training"""
-    logger.info(f"Logging optimization request for user {user_id} with {len(campaigns)} campaigns")
-    # TODO: Store optimization data for ML model training
-
-async def sync_facebook_data_task(user_id: str):
-    """Background task to sync Facebook campaign data"""
-    logger.info(f"Starting Facebook data sync for user {user_id}")
-    # TODO: Implement actual Facebook API sync
-    # This would typically:
-    # 1. Fetch campaign data from Facebook API
-    # 2. Store in ClickHouse
-    # 3. Trigger Kafka events for real-time processing
-    # 4. Update ML model features
+        logger.error(f"Error generating recommendations for campaign {campaign_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate recommendations: {str(e)}")

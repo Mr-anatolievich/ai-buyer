@@ -32,7 +32,7 @@ redis==5.2.0
 pymongo==4.10.1
 
 # Message Queue and Streaming
-kafka-python==2.0.2
+kafka-python==2.2.15
 celery[redis]==5.4.0
 kombu==5.4.2
 

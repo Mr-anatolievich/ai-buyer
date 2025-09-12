@@ -1,249 +1,214 @@
 """
-ML Predictions routes
-Handles CTR predictions, conversion forecasting, and performance predictions
+Predictions API Routes for AI-Buyer
+Handles CTR predictions and budget optimization
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel, Field
-from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
 import logging
+from datetime import datetime
+
+from ..ml.models.ctr_predictor import CTRPredictor
+from ..ml.models.budget_optimizer import BudgetOptimizer
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Pydantic models for ML predictions
+# Request/Response Models
 class CTRPredictionRequest(BaseModel):
-    user_id: str = Field(..., description="User ID")
-    campaign_id: str = Field(..., description="Campaign ID") 
-    ad_set_id: Optional[str] = Field(None, description="Ad Set ID")
-    features: Dict[str, Any] = Field(..., description="Feature data for prediction")
+    campaign_id: str = Field(..., description="Campaign ID")
+    age_group: str = Field(..., description="Target age group")
+    gender: str = Field(..., description="Target gender")
+    device_type: str = Field(..., description="Device type")
+    placement: str = Field(..., description="Ad placement")
+    bid_amount: float = Field(..., gt=0, description="Bid amount in USD")
+    budget_remaining: float = Field(..., ge=0, description="Remaining budget")
+    audience_size: int = Field(..., gt=0, description="Target audience size")
 
 class CTRPredictionResponse(BaseModel):
-    campaign_id: str
     predicted_ctr: float
     confidence_interval: List[float]
-    feature_importance: Dict[str, float]
-    prediction_date: datetime
+    model_version: str
+    prediction_date: str
+    recommendation: str
 
-class ConversionForecastRequest(BaseModel):
-    user_id: str = Field(..., description="User ID")
-    campaign_ids: List[str] = Field(..., description="List of campaign IDs")
-    forecast_days: int = Field(7, description="Number of days to forecast")
-    historical_data: Optional[Dict[str, Any]] = Field(None, description="Additional historical data")
+class BudgetOptimizationRequest(BaseModel):
+    user_id: str = Field(..., description="User identifier")
+    campaigns: List[Dict[str, Any]] = Field(..., description="List of campaigns")
+    total_budget: float = Field(..., gt=0, description="Total budget to allocate")
+    optimization_goal: str = Field(default="conversions", description="Optimization goal")
+    time_horizon_days: int = Field(default=7, ge=1, le=30, description="Optimization time horizon")
 
-class ConversionForecastResponse(BaseModel):
-    user_id: str
-    forecast_period_days: int
-    campaigns_forecast: Dict[str, Dict[str, float]]
-    total_predicted_conversions: float
-    forecast_accuracy: float
-    created_at: datetime
+class BudgetOptimizationResponse(BaseModel):
+    recommendations: List[Dict[str, Any]]
+    expected_improvement: Dict[str, float]
+    confidence_score: float
+    optimization_success: bool
 
-@router.post("/ctr")
-async def predict_ctr(request: CTRPredictionRequest) -> CTRPredictionResponse:
-    """Predict Click-Through Rate using DeepCTR model"""
+# CTR Prediction Endpoint
+@router.post("/ctr/predict", response_model=CTRPredictionResponse)
+async def predict_ctr(request: CTRPredictionRequest, user_id: str = "default"):
+    """
+    Predict Click-Through Rate for Facebook ad campaign
+    """
     try:
-        logger.info(f"Predicting CTR for campaign {request.campaign_id}")
+        logger.info(f"CTR prediction request for user {user_id}, campaign {request.campaign_id}")
         
-        # TODO: Load trained DeepCTR model for user
-        # TODO: Preprocess features and make prediction
+        # Initialize predictor
+        predictor = CTRPredictor(user_id)
         
-        # Mock prediction for now
-        mock_prediction = {
-            "predicted_ctr": 0.045,  # 4.5% CTR
-            "confidence_interval": [0.038, 0.052],
-            "feature_importance": {
-                "audience_age": 0.23,
-                "placement_type": 0.19,
-                "time_of_day": 0.15,
-                "device_type": 0.13,
-                "creative_format": 0.12,
-                "budget_level": 0.08,
-                "campaign_objective": 0.06,
-                "weather_factor": 0.04
-            }
+        # Prepare campaign data
+        campaign_data = {
+            "campaign_id": request.campaign_id,
+            "age_group": request.age_group,
+            "gender": request.gender,
+            "device_type": request.device_type,
+            "placement": request.placement,
+            "bid_amount": request.bid_amount,
+            "budget_remaining": request.budget_remaining,
+            "audience_size": request.audience_size,
+            "timestamp": datetime.now()
         }
+        
+        # Get prediction
+        result = predictor.predict(campaign_data)
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        # Generate recommendation
+        ctr = result["predicted_ctr"]
+        if ctr >= 0.02:
+            recommendation = "Високий потенціал CTR - рекомендуємо збільшити бюджет"
+        elif ctr >= 0.01:
+            recommendation = "Середній CTR - можна оптимізувати таргетинг"
+        else:
+            recommendation = "Низький CTR - рекомендуємо змінити креатив або аудиторію"
         
         return CTRPredictionResponse(
-            campaign_id=request.campaign_id,
-            predicted_ctr=mock_prediction["predicted_ctr"],
-            confidence_interval=mock_prediction["confidence_interval"],
-            feature_importance=mock_prediction["feature_importance"],
-            prediction_date=datetime.now()
+            predicted_ctr=result["predicted_ctr"],
+            confidence_interval=result["confidence_interval"],
+            model_version=result.get("model_version", "unknown"),
+            prediction_date=result["prediction_date"],
+            recommendation=recommendation
         )
         
     except Exception as e:
-        logger.error(f"Error predicting CTR for campaign {request.campaign_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"CTR prediction failed: {str(e)}")
+        logger.error(f"CTR prediction failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
-@router.post("/conversions/forecast") 
-async def forecast_conversions(request: ConversionForecastRequest) -> ConversionForecastResponse:
-    """Forecast conversions using Prophet time series model"""
+# Budget Optimization Endpoint
+@router.post("/budget/optimize", response_model=BudgetOptimizationResponse)
+async def optimize_budget(request: BudgetOptimizationRequest, background_tasks: BackgroundTasks):
+    """
+    Optimize budget allocation across campaigns
+    """
     try:
-        logger.info(f"Forecasting conversions for user {request.user_id}")
+        logger.info(f"Budget optimization for user {request.user_id}, {len(request.campaigns)} campaigns")
         
-        # TODO: Load trained Prophet models for each campaign
-        # TODO: Generate forecasts for specified period
+        # Initialize optimizer
+        optimizer = BudgetOptimizer(request.user_id)
         
-        # Mock forecast data
-        campaigns_forecast = {}
-        total_conversions = 0
+        # Check if models are trained
+        if not optimizer.is_trained:
+            try:
+                optimizer.load_models()
+            except Exception:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Models not trained for this user. Please train models first."
+                )
         
-        for campaign_id in request.campaign_ids:
-            # Generate mock daily forecasts
-            daily_forecast = {}
-            for day in range(1, request.forecast_days + 1):
-                base_conversions = 8.5  # Base daily conversions
-                trend_factor = 1 + (day * 0.02)  # Slight upward trend
-                seasonal_factor = 1.2 if day % 7 in [6, 7] else 1.0  # Weekend boost
-                
-                predicted_conversions = base_conversions * trend_factor * seasonal_factor
-                daily_forecast[f"day_{day}"] = round(predicted_conversions, 2)
-                total_conversions += predicted_conversions
-            
-            campaigns_forecast[campaign_id] = daily_forecast
-        
-        return ConversionForecastResponse(
-            user_id=request.user_id,
-            forecast_period_days=request.forecast_days,
-            campaigns_forecast=campaigns_forecast,
-            total_predicted_conversions=round(total_conversions, 2),
-            forecast_accuracy=0.84,  # Mock accuracy score
-            created_at=datetime.now()
+        # Run optimization
+        result = optimizer.optimize_budget_allocation(
+            campaigns=request.campaigns,
+            total_budget=request.total_budget,
+            optimization_goal=request.optimization_goal
         )
         
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        return BudgetOptimizationResponse(
+            recommendations=result["recommendations"],
+            expected_improvement=result["expected_improvement"],
+            confidence_score=result.get("confidence_score", 0.7),
+            optimization_success=result["optimization_success"]
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error forecasting conversions for user {request.user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Conversion forecast failed: {str(e)}")
+        logger.error(f"Budget optimization failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
 
-@router.get("/performance/{campaign_id}")
-async def get_performance_prediction(
-    campaign_id: str,
-    prediction_type: str = "all",
-    days_ahead: int = 3
-):
-    """Get comprehensive performance predictions for a campaign"""
+# Model Training Endpoint
+@router.post("/models/train")
+async def train_models(user_id: str, background_tasks: BackgroundTasks):
+    """
+    Trigger model training for user (async)
+    """
     try:
-        logger.info(f"Getting performance prediction for campaign {campaign_id}")
-        
-        # TODO: Use ensemble of ML models for comprehensive prediction
-        
-        # Mock comprehensive prediction
-        performance_prediction = {
-            "campaign_id": campaign_id,
-            "prediction_horizon_days": days_ahead,
-            "predictions": {
-                "ctr": {
-                    "current": 0.042,
-                    "predicted": 0.048,
-                    "change_percent": 14.3,
-                    "confidence": 0.87
-                },
-                "cpc": {
-                    "current": 1.25,
-                    "predicted": 1.18,
-                    "change_percent": -5.6,
-                    "confidence": 0.82
-                },
-                "conversions": {
-                    "current_daily": 12.3,
-                    "predicted_daily": 15.1,
-                    "change_percent": 22.8,
-                    "confidence": 0.79
-                },
-                "roas": {
-                    "current": 2.8,
-                    "predicted": 3.4,
-                    "change_percent": 21.4,
-                    "confidence": 0.75
-                }
-            },
-            "risk_factors": [
-                "Increased competition detected in audience segment",
-                "Seasonal trend may affect performance next week"
-            ],
-            "recommendations": [
-                "Consider increasing bid by 8% to maintain performance",
-                "Test new creative variants to improve CTR",
-                "Monitor competitor activity closely"
-            ],
-            "model_versions": {
-                "ctr_model": "v2.1.3",
-                "conversion_model": "v1.8.7", 
-                "prophet_forecast": "v1.1.0"
-            },
-            "prediction_date": datetime.now().isoformat()
-        }
-        
-        return performance_prediction
-        
-    except Exception as e:
-        logger.error(f"Error getting performance prediction for campaign {campaign_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Performance prediction failed: {str(e)}")
-
-@router.post("/retrain/{user_id}")
-async def trigger_model_retraining(user_id: str):
-    """Trigger ML model retraining for a specific user"""
-    try:
-        logger.info(f"Triggering model retraining for user {user_id}")
-        
-        # TODO: Trigger Celery task for model retraining
-        # This would typically:
-        # 1. Fetch latest training data from ClickHouse
-        # 2. Retrain CTR prediction model
-        # 3. Retrain Prophet forecasting models
-        # 4. Update model registry in MLflow
-        # 5. Deploy new models to production
+        # Add training task to background
+        background_tasks.add_task(train_user_models, user_id)
         
         return {
-            "status": "retraining_initiated",
+            "message": "Model training started",
             "user_id": user_id,
-            "message": "Model retraining started in background",
-            "estimated_completion": "15-30 minutes"
+            "status": "in_progress",
+            "started_at": datetime.now().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"Error triggering retraining for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Retraining failed: {str(e)}")
+        logger.error(f"Training trigger failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/models/{user_id}/status")
-async def get_model_status(user_id: str):
-    """Get current status of ML models for a user"""
+# Background task for training
+async def train_user_models(user_id: str):
+    """Background task to train ML models"""
     try:
-        # TODO: Query MLflow model registry for actual status
+        from ..ml.training.trainer import MLTrainingPipeline
         
-        model_status = {
-            "user_id": user_id,
-            "models": {
-                "ctr_predictor": {
-                    "version": "v2.1.3",
-                    "accuracy": 0.89,
-                    "last_trained": "2025-09-10T14:30:00Z",
-                    "status": "active",
-                    "training_samples": 45230
-                },
-                "conversion_forecaster": {
-                    "version": "v1.8.7", 
-                    "mape": 12.3,  # Mean Absolute Percentage Error
-                    "last_trained": "2025-09-09T09:15:00Z",
-                    "status": "active",
-                    "training_days": 90
-                },
-                "budget_optimizer": {
-                    "version": "v1.5.2",
-                    "performance_improvement": 18.7,
-                    "last_trained": "2025-09-08T16:45:00Z", 
-                    "status": "active",
-                    "optimization_rounds": 156
-                }
-            },
-            "overall_health": "excellent",
-            "next_scheduled_training": "2025-09-13T02:00:00Z"
-        }
+        # This would fetch user's data from ClickHouse
+        # For now, using mock data
+        import pandas as pd
+        import numpy as np
         
-        return model_status
+        # Generate mock training data
+        n_samples = 1000
+        training_data = pd.DataFrame({
+            'campaign_id': [f'camp_{i%10}' for i in range(n_samples)],
+            'timestamp': pd.date_range('2024-01-01', periods=n_samples, freq='H'),
+            'impressions': np.random.randint(100, 10000, n_samples),
+            'clicks': np.random.randint(1, 500, n_samples),
+            'spend': np.random.uniform(10, 1000, n_samples),
+            'conversions': np.random.randint(0, 50, n_samples)
+        })
+        
+        # Initialize training pipeline
+        trainer = MLTrainingPipeline(user_id)
+        
+        # Run training
+        result = await trainer.run_full_training_pipeline(training_data)
+        
+        logger.info(f"Training completed for user {user_id}: {result}")
         
     except Exception as e:
-        logger.error(f"Error getting model status for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get model status: {str(e)}")
+        logger.error(f"Background training failed for user {user_id}: {e}")
+
+# Model Status Endpoint
+@router.get("/models/status")
+async def get_model_status(user_id: str = "default"):
+    """Get status of ML models for user"""
+    try:
+        from ..ml.training.trainer import MLTrainingPipeline
+        
+        trainer = MLTrainingPipeline(user_id)
+        status = trainer.get_model_status()
+        
+        return status
+        
+    except Exception as e:
+        logger.error(f"Status check failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
