@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslations } from '@/lib/translations';
-import { ThemeDemo } from '@/components/ThemeDemo';
 
 const MOCK_STATS = [
   {
@@ -79,9 +78,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Theme Demo Selector */}
-      <ThemeDemo />
-      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -16,11 +16,11 @@
     --popover: 0 0% 100%;
     --popover-foreground: 217 19% 27%;
 
-    /* Brand primary - Modern Purple-Blue */
-    --primary: 262 83% 58%;
+    /* Brand primary - Professional blue */
+    --primary: 214 84% 56%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 270 91% 65%;
-    --primary-light: 262 83% 95%;
+    --primary-hover: 214 84% 48%;
+    --primary-light: 214 84% 92%;
 
     /* Status colors */
     --success: 142 71% 45%;
@@ -36,28 +36,28 @@
     --destructive-light: 0 84% 95%;
 
     /* Neutral colors */
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217 10% 96%;
+    --secondary-foreground: 217 19% 27%;
 
     --muted: 217 10% 96%;
     --muted-foreground: 217 10% 64%;
 
-    --accent: 270 91% 65%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 217 20% 95%;
+    --accent-foreground: 217 19% 27%;
 
     --border: 217 12% 91%;
     --input: 217 12% 91%;
-    --ring: 262 83% 58%;
+    --ring: 214 84% 56%;
 
     /* Sidebar colors */
     --sidebar-background: 217 19% 27%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary: 214 84% 56%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 217 19% 35%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 217 19% 35%;
-    --sidebar-ring: 262 83% 58%;
+    --sidebar-ring: 214 84% 56%;
 
     /* Design tokens */
     --radius: 0.75rem;
