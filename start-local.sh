@@ -22,6 +22,17 @@ fi
 
 echo "✅ Node.js $(node --version) знайдено"
 
+# Перевірка OpenMP для ML бібліотек (macOS)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if ! brew list libomp &> /dev/null; then
+        echo "📦 Встановлення OpenMP для ML бібліотек..."
+        brew install libomp > /dev/null 2>&1
+        echo "✅ OpenMP встановлено"
+    else
+        echo "✅ OpenMP доступний"
+    fi
+fi
+
 # Створення .env.local якщо його немає
 if [ ! -f .env.local ]; then
     echo "📝 Створення .env.local..."
@@ -74,7 +85,32 @@ fi
 
 # Активація віртуального середовища та встановлення залежностей
 source venv/bin/activate
+
+echo "📦 Встановлення базових залежностей..."
 pip install fastapi uvicorn > /dev/null 2>&1
+
+# Встановлення ML залежностей якщо backend/requirements.txt існує
+if [ -f "backend/requirements.txt" ]; then
+    echo "🤖 Встановлення ML залежностей..."
+    echo "   (Це може зайняти кілька хвилин при першому запуску)"
+    
+    # Оновлення pip
+    pip install --upgrade pip > /dev/null 2>&1
+    
+    # Встановлення ML пакетів (пропускаємо проблемні)
+    echo "   📊 Встановлення основних ML бібліотек..."
+    pip install pandas numpy scikit-learn mlflow > /dev/null 2>&1
+    
+    echo "   🚀 Встановлення додаткових ML інструментів..."
+    pip install xgboost lightgbm prophet statsmodels > /dev/null 2>&1
+    
+    echo "   🔧 Встановлення інфраструктурних пакетів..."
+    pip install redis pymongo clickhouse-driver celery plotly > /dev/null 2>&1
+    
+    echo "   ✅ ML інфраструктура готова!"
+else
+    echo "⚠️  backend/requirements.txt не знайдено, пропускаємо ML залежності"
+fi
 
 # Запуск сервера
 nohup python mock_server.py > logs/backend.log 2>&1 &
