@@ -12,7 +12,8 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslations } from '@/lib/translations';
+import { useTranslations, type TranslationKeys } from '@/lib/translations';
+import { useAppStore } from '@/store/useAppStore';
 
 const MOCK_STATS = [
   {
@@ -73,7 +74,8 @@ const RECENT_CAMPAIGNS = [
 ];
 
 export default function DashboardPage() {
-  const t = useTranslations();
+  const { language } = useAppStore();
+  const { t } = useTranslations(language);
   const navigate = useNavigate();
 
   return (
@@ -81,14 +83,14 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t.dashboard}</h1>
+          <h1 className="text-3xl font-bold">{t('dashboard')}</h1>
           <p className="text-muted-foreground mt-1">
-            {t.welcomeBack}! Ось огляд ефективності вашої реклами.
+            {t('welcomeBack')}! Ось огляд ефективності вашої реклами.
           </p>
         </div>
         <Button onClick={() => navigate('/autoupload')} className="gap-2">
           <Plus className="w-4 h-4" />
-          {t.createCampaign}
+          {t('createCampaign')}
         </Button>
       </div>
 
@@ -98,7 +100,7 @@ export default function DashboardPage() {
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t[stat.title as keyof typeof t]}
+                {t(stat.title as keyof TranslationKeys)}
               </CardTitle>
               <stat.icon className="w-4 h-4 text-muted-foreground" />
             </CardHeader>
@@ -124,7 +126,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t.recentCampaigns}</CardTitle>
+            <CardTitle>{t('recentCampaigns')}</CardTitle>
             <CardDescription>Ваші останні рекламні кампанії</CardDescription>
           </CardHeader>
           <CardContent>
@@ -139,7 +141,7 @@ export default function DashboardPage() {
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {campaign.conversions} {t.conversions} • CPA: {campaign.cpa}
+                      {campaign.conversions} {t('conversions')} • CPA: {campaign.cpa}
                     </div>
                   </div>
                   <div className="text-right">

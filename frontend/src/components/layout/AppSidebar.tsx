@@ -27,36 +27,38 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useTranslations } from '@/lib/translations';
+import { useAppStore } from '@/store/useAppStore';
 import { Separator } from '@/components/ui/separator';
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const collapsed = state === 'collapsed';
-  const t = useTranslations();
+  const { language } = useAppStore();
+  const { t } = useTranslations(language);
 
   const mainItems = [
-    { title: t.dashboard, url: '/', icon: LayoutDashboard },
-    { title: t.autoupload, url: '/autoupload', icon: Upload },
-    { title: t.statistics, url: '/statistics', icon: BarChart3 },
-    { title: t.creatives, url: '/creatives', icon: Image },
-    { title: t.facebookAccounts, url: '/facebook-accounts', icon: Users },
+    { title: t('dashboard'), url: '/', icon: LayoutDashboard },
+    { title: t('autoupload'), url: '/autoupload', icon: Upload },
+    { title: t('statistics'), url: '/statistics', icon: BarChart3 },
+    { title: t('creatives'), url: '/creatives', icon: Image },
+    { title: t('facebookAccounts'), url: '/facebook-accounts', icon: Users },
   ];
 
   const analyticsItems = [
-    { title: t.aiAnalyst, url: '/ai-analyst', icon: Bot },
-    { title: t.autoRules, url: '/auto-rules', icon: Zap },
+    { title: t('aiAnalyst'), url: '/ai-analyst', icon: Bot },
+    { title: t('autoRules'), url: '/auto-rules', icon: Zap },
   ];
 
   const managementItems = [
-    { title: t.accounts, url: '/accounts', icon: Users },
-    { title: t.team, url: '/team', icon: UsersIcon },
-    { title: t.billings, url: '/billings', icon: CreditCard },
+    { title: t('accounts'), url: '/accounts', icon: Users },
+    { title: t('team'), url: '/team', icon: UsersIcon },
+    { title: t('billings'), url: '/billings', icon: CreditCard },
   ];
 
   const systemItems = [
-    { title: t.console, url: '/console', icon: Terminal },
-    { title: t.settings, url: '/settings', icon: Settings },
+    { title: t('console'), url: '/console', icon: Terminal },
+    { title: t('settings'), url: '/settings', icon: Settings },
   ];
 
   const isActive = (path: string) => {

@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Plus, Search, Edit, Trash2, Settings, BarChart3, Users, MessageSquare, MoreVertical } from 'lucide-react';
 import { useTranslations } from '@/lib/translations';
+import { useAppStore } from '@/store/useAppStore';
 
 interface FacebookAccount {
   id: number;
@@ -34,7 +35,8 @@ interface FacebookAccount {
 }
 
 export default function FacebookAccountsPage() {
-  const t = useTranslations();
+  const { language } = useAppStore();
+  const { t } = useTranslations(language);
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
@@ -129,11 +131,11 @@ export default function FacebookAccountsPage() {
       
       // Валідація
       if (!newAccountData.name.trim()) {
-        alert('Введіть назву акаунта');
+        alert(t('accountNamePlaceholder'));
         return;
       }
       if (!newAccountData.token.trim()) {
-        alert('Введіть токен');
+        alert(t('accessTokenPlaceholder'));
         return;
       }
 
@@ -173,7 +175,7 @@ export default function FacebookAccountsPage() {
         console.log('Акаунт створено:', createdAccount);
         
         // Показуємо успішне повідомлення
-        alert(`Акаунт "${createdAccount.name}" успішно додано!`);
+        alert(`${t('addAccount')} "${createdAccount.name}" ${t('statusSuccess')}!`);
         
         // Очищаємо форму та закриваємо модальне вікно
         setNewAccountData({
@@ -194,12 +196,12 @@ export default function FacebookAccountsPage() {
       } else {
         const error = await response.json();
         console.error('Помилка API:', error);
-        alert(`Помилка: ${error.detail}`);
+        alert(`${t('error')}: ${error.detail}`);
       }
       
     } catch (error) {
       console.error('Помилка збереження акаунта:', error);
-      alert('Помилка збереження акаунта');
+      alert(t('error'));
     } finally {
       setSaving(false);
     }
@@ -208,11 +210,21 @@ export default function FacebookAccountsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-500">Активен</Badge>;
+        return <Badge variant="default" className="bg-green-500">{t('statusActive')}</Badge>;
       case 'inactive':
-        return <Badge variant="secondary">Неактивен</Badge>;
+        return <Badge variant="secondary">{status}</Badge>;
       case 'banned':
-        return <Badge variant="destructive">Заблоковано</Badge>;
+        return <Badge variant="destructive">{t('statusStopped')}</Badge>;
+      case 'pending':
+        return <Badge variant="outline">{t('statusPending')}</Badge>;
+      case 'paused':
+        return <Badge variant="outline">{t('statusPaused')}</Badge>;
+      case 'error':
+        return <Badge variant="destructive">{t('statusError')}</Badge>;
+      case 'expired':
+        return <Badge variant="destructive">{t('statusError')}</Badge>;
+      case 'invalid':
+        return <Badge variant="destructive">{t('statusError')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -223,8 +235,8 @@ export default function FacebookAccountsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Аккаунти Facebook</h1>
-          <p className="text-muted-foreground">Управління Facebook аккаунтами</p>
+          <h1 className="text-3xl font-bold">{t('facebookAccounts')}</h1>
+          <p className="text-muted-foreground">{t('facebookAccounts')} management</p>
         </div>
       </div>
 
@@ -239,18 +251,18 @@ export default function FacebookAccountsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
-                  <SelectItem value="no">Без группы</SelectItem>
+                  <SelectItem value="all">{t('allTypes')}</SelectItem>
+                  <SelectItem value="no">{t('selectGroup')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex-1">
-              <Label htmlFor="search">Пошук</Label>
+              <Label htmlFor="search">{t('search')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Пошук аккаунтів..."
+                  placeholder={t('search') + '...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -261,42 +273,43 @@ export default function FacebookAccountsPage() {
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Додати аккаунт
+                  {t('addAccount')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Новий аккаунт</DialogTitle>
+                  <DialogTitle>{t('addAccount')}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="account-name">Название</Label>
+                    <Label htmlFor="account-name">{t('accountName')}</Label>
                     <Input 
                       id="account-name" 
-                      placeholder="Техническое название"
+                      placeholder={t('accountNamePlaceholder')}
                       value={newAccountData.name}
                       onChange={(e) => setNewAccountData(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="token">Токен</Label>
+                    <Label htmlFor="token">{t('accessToken')}</Label>
                     <Input 
                       id="token" 
-                      placeholder="Токен аккаунта"
+                      placeholder={t('accessTokenPlaceholder')}
                       value={newAccountData.token}
                       onChange={(e) => setNewAccountData(prev => ({ ...prev, token: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="useragent">UserAgent</Label>
+                    <Label htmlFor="useragent">{t('userAgent')}</Label>
                     <Input 
                       id="useragent"
+                      placeholder={t('userAgentPlaceholder')}
                       value={newAccountData.userAgent}
                       onChange={(e) => setNewAccountData(prev => ({ ...prev, userAgent: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="proxy">Прокси</Label>
+                    <Label htmlFor="proxy">{t('proxy')}</Label>
                     <Input 
                       id="proxy" 
                       placeholder="http://user:pass@ip:port"
@@ -305,26 +318,26 @@ export default function FacebookAccountsPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="group">Группа</Label>
+                    <Label htmlFor="group">{t('group')}</Label>
                     <Select 
                       value={newAccountData.group} 
                       onValueChange={(value) => setNewAccountData(prev => ({ ...prev, group: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Выберите группу" />
+                        <SelectValue placeholder={t('selectGroup')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="default">Без группы</SelectItem>
-                        <SelectItem value="test">Тестовая группа</SelectItem>
+                        <SelectItem value="default">{t('selectGroup')}</SelectItem>
+                        <SelectItem value="test">Test Group</SelectItem>
                         <SelectItem value="main">Основная группа</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="cookies">Cookie</Label>
+                    <Label htmlFor="cookies">{t('cookies')}</Label>
                     <Textarea 
                       id="cookies" 
-                      placeholder="Cookie в формате JSON"
+                      placeholder={t('cookiesPlaceholder')}
                       value={newAccountData.cookies}
                       onChange={(e) => setNewAccountData(prev => ({ ...prev, cookies: e.target.value }))}
                       className="min-h-[100px] font-mono text-sm"
@@ -335,25 +348,25 @@ export default function FacebookAccountsPage() {
                   <div className="space-y-4 border-t pt-4">
                     <div className="flex items-center space-x-2">
                       <Switch id="comments-status" />
-                      <Label htmlFor="comments-status">Авточистка комментариев</Label>
+                      <Label htmlFor="comments-status">Auto-clean comments</Label>
                     </div>
                   </div>
                   
                   {/* Notifications */}
                   <div className="space-y-4 border-t pt-4">
-                    <h4 className="font-medium">Настройки уведомлений</h4>
+                    <h4 className="font-medium">{t('settings')}</h4>
                     <div className="grid gap-2">
                       <div className="flex items-center space-x-2">
                         <Switch id="billing-ntf" />
-                        <Label htmlFor="billing-ntf">Уведомления о биллингах</Label>
+                        <Label htmlFor="billing-ntf">Billing notifications</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch id="moderation-ntf" />
-                        <Label htmlFor="moderation-ntf">Уведомления о модерации</Label>
+                        <Label htmlFor="moderation-ntf">Moderation notifications</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch id="status-ntf" defaultChecked />
-                        <Label htmlFor="status-ntf">Уведомления о статусе кабинета</Label>
+                        <Label htmlFor="status-ntf">{t('status')} notifications</Label>
                       </div>
                     </div>
                   </div>
@@ -367,10 +380,10 @@ export default function FacebookAccountsPage() {
                       {saving ? (
                         <div className="flex items-center space-x-2">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                          <span>Збереження...</span>
+                          <span>{t('loading')}</span>
                         </div>
                       ) : (
-                        'Добавить'
+                        t('save')
                       )}
                     </Button>
                     <Button 
@@ -383,7 +396,7 @@ export default function FacebookAccountsPage() {
                         }
                       }}
                     >
-                      Закрыть
+                      {t('cancel')}
                     </Button>
                   </div>
                 </div>
@@ -396,7 +409,7 @@ export default function FacebookAccountsPage() {
       {/* Accounts Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Список аккаунтів</CardTitle>
+          <CardTitle>{t('facebookAccounts')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -410,12 +423,12 @@ export default function FacebookAccountsPage() {
                     />
                   </TableHead>
                   <TableHead>ID</TableHead>
-                  <TableHead>Аккаунт</TableHead>
-                  <TableHead>Группа</TableHead>
-                  <TableHead>Финансы</TableHead>
-                  <TableHead>Статус кабинета</TableHead>
-                  <TableHead>Статус токена</TableHead>
-                  <TableHead>Действия</TableHead>
+                  <TableHead>{t('accountName')}</TableHead>
+                  <TableHead>{t('group')}</TableHead>
+                  <TableHead>Finances</TableHead>
+                  <TableHead>{t('status')}</TableHead>
+                  <TableHead>Token {t('status')}</TableHead>
+                  <TableHead>{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -424,7 +437,7 @@ export default function FacebookAccountsPage() {
                     <TableCell colSpan={8} className="text-center py-8">
                       <div className="flex items-center justify-center space-x-2">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <span>Завантаження акаунтів...</span>
+                        <span>{t('loading')}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -433,8 +446,8 @@ export default function FacebookAccountsPage() {
                     <TableCell colSpan={8} className="text-center py-8">
                       <div className="text-muted-foreground">
                         <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>Акаунтів поки немає</p>
-                        <p className="text-sm">Додайте перший акаунт, натиснувши кнопку "Додати аккаунт"</p>
+                        <p>{t('noData')}</p>
+                        <p className="text-sm">{t('addAccount')}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -454,15 +467,15 @@ export default function FacebookAccountsPage() {
                       <div className="space-y-1">
                         <div className="font-medium">{account.name} ({account.facebook_id})</div>
                         {account.cookies_loaded && (
-                          <Badge variant="secondary" className="text-xs">Куки загружены</Badge>
+                          <Badge variant="secondary" className="text-xs">{t('cookies')} loaded</Badge>
                         )}
                         <div className="text-sm text-muted-foreground">
-                          Основной кабинет: <strong>{account.primary_cabinet || 'Не указан'}</strong>
+                          Primary cabinet: <strong>{account.primary_cabinet || t('statusUnknown')}</strong>
                         </div>
                         <div className="text-sm text-muted-foreground">
                           <strong>({account.primary_cabinet_id || 'N/A'})</strong>{' '}
                           <Badge variant="outline" className="text-xs">
-                            Все кабинеты ({account.total_cabinets})
+                            All cabinets ({account.total_cabinets})
                           </Badge>
                         </div>
                       </div>
@@ -472,9 +485,9 @@ export default function FacebookAccountsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1 text-sm">
-                        {account.balance && <div><strong>Баланс:</strong> {account.balance}</div>}
-                        {account.daily_limit && <div><strong>Лимит:</strong> {account.daily_limit}</div>}
-                        {!account.balance && !account.daily_limit && <span className="text-muted-foreground">Не указано</span>}
+                        {account.balance && <div><strong>Balance:</strong> {account.balance}</div>}
+                        {account.daily_limit && <div><strong>Limit:</strong> {account.daily_limit}</div>}
+                        {!account.balance && !account.daily_limit && <span className="text-muted-foreground">{t('statusUnknown')}</span>}
                       </div>
                     </TableCell>
                     <TableCell>

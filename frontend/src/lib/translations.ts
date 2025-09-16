@@ -48,44 +48,37 @@ export interface TranslationKeys {
   campaignDetails: string;
   campaignNameLabel: string;
   campaignNamePlaceholder: string;
-  objective: string;
-  budgetType: string;
-  daily: string;
-  lifetime: string;
-  dailyBudget: string;
+  campaignObjective: string;
+  selectObjective: string;
+  specialAdCategories: string;
+  selectCategories: string;
   
   // Ad Set Step
   adSetDetails: string;
-  adSetNameLabel: string;
+  adSetName: string;
   adSetNamePlaceholder: string;
-  targeting: string;
-  location: string;
-  locationPlaceholder: string;
+  audience: string;
+  locations: string;
   ageRange: string;
   gender: string;
-  all: string;
-  male: string;
-  female: string;
   interests: string;
-  interestsPlaceholder: string;
+  behaviors: string;
+  budget: string;
+  schedule: string;
   
   // Ad Step
   adDetails: string;
-  creative: string;
-  primaryText: string;
-  primaryTextPlaceholder: string;
+  adName: string;
+  adNamePlaceholder: string;
+  adFormat: string;
   headline: string;
-  headlinePlaceholder: string;
+  primaryText: string;
   description: string;
-  descriptionPlaceholder: string;
-  uploadMedia: string;
-  destination: string;
-  websiteUrl: string;
-  websiteUrlPlaceholder: string;
   callToAction: string;
+  website: string;
   
   // Statistics
-  statisticsOverview: string;
+  performance: string;
   campaigns: string;
   adSets: string;
   ads: string;
@@ -119,6 +112,44 @@ export interface TranslationKeys {
   search: string;
   filter: string;
   export: string;
+  
+  // Facebook Accounts
+  addAccount: string;
+  accountName: string;
+  accountNamePlaceholder: string;
+  accessToken: string;
+  accessTokenPlaceholder: string;
+  userAgent: string;
+  userAgentPlaceholder: string;
+  cookies: string;
+  cookiesPlaceholder: string;
+  group: string;
+  selectGroup: string;
+  proxy: string;
+  selectProxy: string;
+  actionName: string;
+  actionStatus: string;
+  actionCreatedAt: string;
+  actionUpdatedAt: string;
+  actionAdAccount: string;
+  actionCampaign: string;
+  actionAdSet: string;
+  actionAd: string;
+  actionCreative: string;
+  statusActive: string;
+  statusPending: string;
+  statusStopped: string;
+  statusPaused: string;
+  statusError: string;
+  statusSuccess: string;
+  statusFailed: string;
+  statusProcessing: string;
+  statusQueued: string;
+  statusCancelled: string;
+  statusCompleted: string;
+  statusWarning: string;
+  statusUnknown: string;
+  actions: string;
 }
 
 const translations: Record<Language, TranslationKeys> = {
@@ -142,7 +173,7 @@ const translations: Record<Language, TranslationKeys> = {
     signOut: 'Sign Out',
     
     // Dashboard
-    welcomeBack: 'Welcome back',
+    welcomeBack: 'Welcome Back',
     campaignOverview: 'Campaign Overview',
     totalSpend: 'Total Spend',
     totalConversions: 'Total Conversions',
@@ -170,44 +201,37 @@ const translations: Record<Language, TranslationKeys> = {
     campaignDetails: 'Campaign Details',
     campaignNameLabel: 'Campaign Name',
     campaignNamePlaceholder: 'Enter campaign name',
-    objective: 'Objective',
-    budgetType: 'Budget Type',
-    daily: 'Daily',
-    lifetime: 'Lifetime',
-    dailyBudget: 'Daily Budget',
+    campaignObjective: 'Campaign Objective',
+    selectObjective: 'Select Objective',
+    specialAdCategories: 'Special Ad Categories',
+    selectCategories: 'Select Categories',
     
     // Ad Set Step
     adSetDetails: 'Ad Set Details',
-    adSetNameLabel: 'Ad Set Name',
+    adSetName: 'Ad Set Name',
     adSetNamePlaceholder: 'Enter ad set name',
-    targeting: 'Targeting',
-    location: 'Location',
-    locationPlaceholder: 'Enter location',
+    audience: 'Audience',
+    locations: 'Locations',
     ageRange: 'Age Range',
     gender: 'Gender',
-    all: 'All',
-    male: 'Male',
-    female: 'Female',
     interests: 'Interests',
-    interestsPlaceholder: 'Enter interests (comma separated)',
+    behaviors: 'Behaviors',
+    budget: 'Budget',
+    schedule: 'Schedule',
     
     // Ad Step
     adDetails: 'Ad Details',
-    creative: 'Creative',
-    primaryText: 'Primary Text',
-    primaryTextPlaceholder: 'Tell people what your ad is about...',
+    adName: 'Ad Name',
+    adNamePlaceholder: 'Enter ad name',
+    adFormat: 'Ad Format',
     headline: 'Headline',
-    headlinePlaceholder: 'A short, catchy headline',
+    primaryText: 'Primary Text',
     description: 'Description',
-    descriptionPlaceholder: 'Optional description',
-    uploadMedia: 'Upload Media',
-    destination: 'Destination',
-    websiteUrl: 'Website URL',
-    websiteUrlPlaceholder: 'https://example.com',
     callToAction: 'Call to Action',
+    website: 'Website',
     
     // Statistics
-    statisticsOverview: 'Statistics Overview',
+    performance: 'Performance',
     campaigns: 'Campaigns',
     adSets: 'Ad Sets',
     ads: 'Ads',
@@ -241,6 +265,44 @@ const translations: Record<Language, TranslationKeys> = {
     search: 'Search',
     filter: 'Filter',
     export: 'Export',
+    
+    // Facebook Accounts
+    addAccount: 'Add Account',
+    accountName: 'Account Name',
+    accountNamePlaceholder: 'Enter account name',
+    accessToken: 'Access Token',
+    accessTokenPlaceholder: 'Enter access token',
+    userAgent: 'User Agent',
+    userAgentPlaceholder: 'Enter user agent',
+    cookies: 'Cookies',
+    cookiesPlaceholder: 'Enter cookies',
+    group: 'Group',
+    selectGroup: 'Select Group',
+    proxy: 'Proxy',
+    selectProxy: 'Select Proxy',
+    actionName: 'Action',
+    actionStatus: 'Status',
+    actionCreatedAt: 'Created At',
+    actionUpdatedAt: 'Updated At',
+    actionAdAccount: 'Ad Account',
+    actionCampaign: 'Campaign',
+    actionAdSet: 'Ad Set',
+    actionAd: 'Ad',
+    actionCreative: 'Creative',
+    statusActive: 'Active',
+    statusPending: 'Pending',
+    statusStopped: 'Stopped',
+    statusPaused: 'Paused',
+    statusError: 'Error',
+    statusSuccess: 'Success',
+    statusFailed: 'Failed',
+    statusProcessing: 'Processing',
+    statusQueued: 'Queued',
+    statusCancelled: 'Cancelled',
+    statusCompleted: 'Completed',
+    statusWarning: 'Warning',
+    statusUnknown: 'Unknown',
+    actions: 'Actions',
   },
   
   uk: {
@@ -280,7 +342,7 @@ const translations: Record<Language, TranslationKeys> = {
     campaign: 'Кампанія',
     adSet: 'Група оголошень',
     ad: 'Оголошення',
-    preview: 'Перегляд',
+    preview: 'Попередній перегляд',
     templates: 'Шаблони',
     back: 'Назад',
     next: 'Далі',
@@ -291,44 +353,37 @@ const translations: Record<Language, TranslationKeys> = {
     campaignDetails: 'Деталі кампанії',
     campaignNameLabel: 'Назва кампанії',
     campaignNamePlaceholder: 'Введіть назву кампанії',
-    objective: 'Мета',
-    budgetType: 'Тип бюджету',
-    daily: 'Щоденний',
-    lifetime: 'Довічний',
-    dailyBudget: 'Щоденний бюджет',
+    campaignObjective: 'Мета кампанії',
+    selectObjective: 'Оберіть мету',
+    specialAdCategories: 'Спеціальні категорії реклами',
+    selectCategories: 'Оберіть категорії',
     
     // Ad Set Step
     adSetDetails: 'Деталі групи оголошень',
-    adSetNameLabel: 'Назва групи оголошень',
+    adSetName: 'Назва групи оголошень',
     adSetNamePlaceholder: 'Введіть назву групи оголошень',
-    targeting: 'Таргетування',
-    location: 'Локація',
-    locationPlaceholder: 'Введіть локацію',
+    audience: 'Аудиторія',
+    locations: 'Локації',
     ageRange: 'Віковий діапазон',
     gender: 'Стать',
-    all: 'Всі',
-    male: 'Чоловічий',
-    female: 'Жіночий',
     interests: 'Інтереси',
-    interestsPlaceholder: 'Введіть інтереси (через кому)',
+    behaviors: 'Поведінка',
+    budget: 'Бюджет',
+    schedule: 'Розклад',
     
     // Ad Step
     adDetails: 'Деталі оголошення',
-    creative: 'Креатив',
-    primaryText: 'Основний текст',
-    primaryTextPlaceholder: 'Розкажіть людям про своє оголошення...',
+    adName: 'Назва оголошення',
+    adNamePlaceholder: 'Введіть назву оголошення',
+    adFormat: 'Формат оголошення',
     headline: 'Заголовок',
-    headlinePlaceholder: 'Короткий, привабливий заголовок',
+    primaryText: 'Основний текст',
     description: 'Опис',
-    descriptionPlaceholder: 'Додатковий опис',
-    uploadMedia: 'Завантажити медіа',
-    destination: 'Призначення',
-    websiteUrl: 'URL веб-сайту',
-    websiteUrlPlaceholder: 'https://example.com',
     callToAction: 'Заклик до дії',
+    website: 'Веб-сайт',
     
     // Statistics
-    statisticsOverview: 'Огляд статистики',
+    performance: 'Ефективність',
     campaigns: 'Кампанії',
     adSets: 'Групи оголошень',
     ads: 'Оголошення',
@@ -348,11 +403,11 @@ const translations: Record<Language, TranslationKeys> = {
     // AI Analyst
     askAiAnalyst: 'Запитати ШІ Аналітика',
     askQuestionPlaceholder: 'Запитайте про ефективність ваших кампаній...',
-    suggestedQuestions: 'Пропоновані питання',
+    suggestedQuestions: 'Рекомендовані питання',
     
     // Common
     loading: 'Завантаження...',
-    noData: 'Дані відсутні',
+    noData: 'Немає даних',
     error: 'Виникла помилка',
     save: 'Зберегти',
     cancel: 'Скасувати',
@@ -362,6 +417,44 @@ const translations: Record<Language, TranslationKeys> = {
     search: 'Пошук',
     filter: 'Фільтр',
     export: 'Експорт',
+    
+    // Facebook Accounts
+    addAccount: 'Додати аккаунт',
+    accountName: 'Назва аккаунта',
+    accountNamePlaceholder: 'Введіть назву аккаунта',
+    accessToken: 'Токен доступу',
+    accessTokenPlaceholder: 'Введіть токен доступу',
+    userAgent: 'User Agent',
+    userAgentPlaceholder: 'Введіть User Agent',
+    cookies: 'Cookies',
+    cookiesPlaceholder: 'Введіть cookies',
+    group: 'Група',
+    selectGroup: 'Оберіть групу',
+    proxy: 'Проксі',
+    selectProxy: 'Оберіть проксі',
+    actionName: 'Дія',
+    actionStatus: 'Статус',
+    actionCreatedAt: 'Створено',
+    actionUpdatedAt: 'Оновлено',
+    actionAdAccount: 'Рекламний аккаунт',
+    actionCampaign: 'Кампанія',
+    actionAdSet: 'Група оголошень',
+    actionAd: 'Оголошення',
+    actionCreative: 'Креатив',
+    statusActive: 'Активний',
+    statusPending: 'Очікує',
+    statusStopped: 'Зупинено',
+    statusPaused: 'Призупинено',
+    statusError: 'Помилка',
+    statusSuccess: 'Успішно',
+    statusFailed: 'Не вдалося',
+    statusProcessing: 'Обробляється',
+    statusQueued: 'В черзі',
+    statusCancelled: 'Скасовано',
+    statusCompleted: 'Завершено',
+    statusWarning: 'Попередження',
+    statusUnknown: 'Невідомо',
+    actions: 'Дії',
   },
   
   ru: {
@@ -412,44 +505,37 @@ const translations: Record<Language, TranslationKeys> = {
     campaignDetails: 'Детали кампании',
     campaignNameLabel: 'Название кампании',
     campaignNamePlaceholder: 'Введите название кампании',
-    objective: 'Цель',
-    budgetType: 'Тип бюджета',
-    daily: 'Ежедневный',
-    lifetime: 'Пожизненный',
-    dailyBudget: 'Ежедневный бюджет',
+    campaignObjective: 'Цель кампании',
+    selectObjective: 'Выберите цель',
+    specialAdCategories: 'Специальные категории рекламы',
+    selectCategories: 'Выберите категории',
     
     // Ad Set Step
     adSetDetails: 'Детали группы объявлений',
-    adSetNameLabel: 'Название группы объявлений',
+    adSetName: 'Название группы объявлений',
     adSetNamePlaceholder: 'Введите название группы объявлений',
-    targeting: 'Таргетирование',
-    location: 'Локация',
-    locationPlaceholder: 'Введите локацию',
+    audience: 'Аудитория',
+    locations: 'Локации',
     ageRange: 'Возрастной диапазон',
     gender: 'Пол',
-    all: 'Все',
-    male: 'Мужской',
-    female: 'Женский',
     interests: 'Интересы',
-    interestsPlaceholder: 'Введите интересы (через запятую)',
+    behaviors: 'Поведение',
+    budget: 'Бюджет',
+    schedule: 'Расписание',
     
     // Ad Step
     adDetails: 'Детали объявления',
-    creative: 'Креатив',
-    primaryText: 'Основной текст',
-    primaryTextPlaceholder: 'Расскажите людям о вашем объявлении...',
+    adName: 'Название объявления',
+    adNamePlaceholder: 'Введите название объявления',
+    adFormat: 'Формат объявления',
     headline: 'Заголовок',
-    headlinePlaceholder: 'Короткий, привлекательный заголовок',
+    primaryText: 'Основной текст',
     description: 'Описание',
-    descriptionPlaceholder: 'Дополнительное описание',
-    uploadMedia: 'Загрузить медиа',
-    destination: 'Назначение',
-    websiteUrl: 'URL веб-сайта',
-    websiteUrlPlaceholder: 'https://example.com',
     callToAction: 'Призыв к действию',
+    website: 'Веб-сайт',
     
     // Statistics
-    statisticsOverview: 'Обзор статистики',
+    performance: 'Производительность',
     campaigns: 'Кампании',
     adSets: 'Группы объявлений',
     ads: 'Объявления',
@@ -468,32 +554,71 @@ const translations: Record<Language, TranslationKeys> = {
     
     // AI Analyst
     askAiAnalyst: 'Спросить ИИ Аналитика',
-    askQuestionPlaceholder: 'Спросите об эффективности ваших кампаний...',
-    suggestedQuestions: 'Предлагаемые вопросы',
+    askQuestionPlaceholder: 'Спросите о производительности ваших кампаний...',
+    suggestedQuestions: 'Рекомендуемые вопросы',
     
     // Common
     loading: 'Загрузка...',
-    noData: 'Данные отсутствуют',
+    noData: 'Нет данных',
     error: 'Произошла ошибка',
     save: 'Сохранить',
-    cancel: 'Отмена',
+    cancel: 'Отменить',
     delete: 'Удалить',
     edit: 'Редактировать',
-    view: 'Посмотреть',
+    view: 'Просмотреть',
     search: 'Поиск',
     filter: 'Фильтр',
     export: 'Экспорт',
+    
+    // Facebook Accounts
+    addAccount: 'Добавить аккаунт',
+    accountName: 'Название аккаунта',
+    accountNamePlaceholder: 'Введите название аккаунта',
+    accessToken: 'Токен доступа',
+    accessTokenPlaceholder: 'Введите токен доступа',
+    userAgent: 'User Agent',
+    userAgentPlaceholder: 'Введите User Agent',
+    cookies: 'Cookies',
+    cookiesPlaceholder: 'Введите cookies',
+    group: 'Группа',
+    selectGroup: 'Выберите группу',
+    proxy: 'Прокси',
+    selectProxy: 'Выберите прокси',
+    actionName: 'Действие',
+    actionStatus: 'Статус',
+    actionCreatedAt: 'Создано',
+    actionUpdatedAt: 'Обновлено',
+    actionAdAccount: 'Рекламный аккаунт',
+    actionCampaign: 'Кампания',
+    actionAdSet: 'Группа объявлений',
+    actionAd: 'Объявление',
+    actionCreative: 'Креатив',
+    statusActive: 'Активный',
+    statusPending: 'Ожидает',
+    statusStopped: 'Остановлен',
+    statusPaused: 'Приостановлен',
+    statusError: 'Ошибка',
+    statusSuccess: 'Успешно',
+    statusFailed: 'Не удалось',
+    statusProcessing: 'Обрабатывается',
+    statusQueued: 'В очереди',
+    statusCancelled: 'Отменено',
+    statusCompleted: 'Завершено',
+    statusWarning: 'Предупреждение',
+    statusUnknown: 'Неизвестно',
+    actions: 'Действия',
   },
 };
 
-export function getTranslations(language: Language): TranslationKeys {
-  return translations[language];
+export function getTranslation(key: keyof TranslationKeys, language: Language): string {
+  return translations[language][key] || translations['en'][key] || key;
 }
 
-export function useTranslations() {
-  const language = useAppStore(state => state.language);
-  return getTranslations(language);
+export function useTranslations(language: Language) {
+  return {
+    t: (key: keyof TranslationKeys) => getTranslation(key, language),
+    translations: translations[language],
+  };
 }
 
-// Import useAppStore at the bottom to avoid circular dependency
-import { useAppStore } from '@/store/useAppStore';
+export default translations;

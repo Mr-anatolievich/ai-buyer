@@ -39,19 +39,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       loading.style.display = "block";
       status.className = "status warning";
       status.textContent = "⏳ Витягуємо дані...";
-      
+
       console.log("🔍 Початок витягування даних...");
 
       // Спочатку перевіряємо, чи є збережений токен
-      const storageData = await chrome.storage.local.get(['lastFoundToken']);
+      const storageData = await chrome.storage.local.get(["lastFoundToken"]);
       console.log("💾 Збережені дані:", storageData);
-      
+
       let token = null;
       let userAgent = navigator.userAgent;
 
       if (storageData.lastFoundToken && storageData.lastFoundToken.token) {
         const tokenAge = Date.now() - storageData.lastFoundToken.timestamp;
-        if (tokenAge < 300000) { // 5 хвилин
+        if (tokenAge < 300000) {
+          // 5 хвилин
           token = storageData.lastFoundToken.token;
           console.log("✅ Використовуємо збережений токен");
         }
@@ -60,14 +61,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Якщо немає збереженого токена, спробуємо витягти з content script
       if (!token) {
         console.log("🔍 Спробуємо витягти новий токен...");
-        
+
         // Спочатку перевіряємо, чи завантажений content script
         let response;
         try {
           console.log("📞 Ping content script...");
           response = await Promise.race([
             chrome.tabs.sendMessage(currentTab.id, { action: "ping" }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000))
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Timeout")), 3000)
+            ),
           ]);
           console.log("✅ Content script відповів:", response);
         } catch (error) {
@@ -94,10 +97,15 @@ document.addEventListener("DOMContentLoaded", async () => {
           console.log("📤 Запитуємо дані з content script...");
           response = await Promise.race([
             chrome.tabs.sendMessage(currentTab.id, { action: "extractData" }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout extracting data")), 5000))
+            new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Timeout extracting data")),
+                5000
+              )
+            ),
           ]);
           console.log("📥 Отримано відповідь:", response);
-          
+
           if (response && response.success && response.data.token) {
             token = response.data.token;
             userAgent = response.data.userAgent || userAgent;
@@ -111,7 +119,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Якщо все ще немає токена, покажемо помилку
       if (!token) {
-        throw new Error("Токен не знайдений. Переконайтеся, що ви авторизовані в Facebook Ads Manager.");
+        throw new Error(
+          "Токен не знайдений. Переконайтеся, що ви авторизовані в Facebook Ads Manager."
+        );
       }
 
       // Отримуємо cookies через Chrome API
@@ -128,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         token: token,
         cookies: cookies,
         userAgent: userAgent,
-        url: currentTab.url
+        url: currentTab.url,
       };
 
       // Показуємо інформацію
@@ -139,9 +149,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       tokenInfo.style.display = "block";
       status.className = "status success";
       status.textContent = "✅ Дані успішно витягнуто!";
-      
-      console.log("🎉 Витягування завершено успішно!");
 
+      console.log("🎉 Витягування завершено успішно!");
     } catch (error) {
       console.error("❌ Помилка:", error);
       loading.style.display = "none";
@@ -275,22 +284,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = result.lastFoundToken;
       const age = Date.now() - data.timestamp;
 
-      if (age < 300000) { // 5 хвилин
+      if (age < 300000) {
+        // 5 хвилин
         console.log("🎉 Знайдено свіжий токен, показуємо автоматично!");
-        
+
         // Отримуємо cookies
         const cookies = await chrome.cookies.getAll({
           domain: ".facebook.com",
         });
-        
+
         // Заповнюємо дані автоматично
         currentData = {
           token: data.token,
           cookies: cookies,
           userAgent: navigator.userAgent,
-          url: data.url
+          url: data.url,
         };
-        
+
         // Показуємо інформацію
         tokenPreview.textContent = currentData.token.substring(0, 50) + "...";
         userAgentPreview.textContent = currentData.userAgent;
@@ -298,7 +308,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         tokenInfo.style.display = "block";
         status.className = "status success";
-        status.textContent = "🎉 Токен знайдено автоматично та готовий до використання!";
+        status.textContent =
+          "🎉 Токен знайдено автоматично та готовий до використання!";
         extractBtn.disabled = false;
       }
     }

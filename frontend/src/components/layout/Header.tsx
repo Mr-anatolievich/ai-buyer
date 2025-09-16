@@ -16,7 +16,7 @@ const LANGUAGES = {
 
 export function Header() {
   const { user, language, setLanguage, setAiAnalystOpen } = useAppStore();
-  const t = useTranslations();
+  const { t } = useTranslations(language);
   const { theme, setTheme } = useTheme();
 
   return (
@@ -45,7 +45,7 @@ export function Header() {
           className="gap-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 transition-all duration-200"
         >
           <Bot className="w-4 h-4 text-primary" />
-          <span className="hidden md:inline">{t.aiAnalyst}</span>
+          <span className="hidden md:inline">{t('aiAnalyst')}</span>
         </Button>
 
         <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1">
@@ -106,16 +106,16 @@ export function Header() {
             </div>
             <DropdownMenuItem className="gap-2 rounded-md">
               <User className="w-4 h-4" />
-              {t.profile}
+              {t('profile')}
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2 rounded-md">
               <Settings className="w-4 h-4" />
-              {t.settings}
+              {t('settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2 text-destructive rounded-md focus:text-destructive">
               <LogOut className="w-4 h-4" />
-              {t.signOut}
+              {t('signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
