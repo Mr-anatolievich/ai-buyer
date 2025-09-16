@@ -260,13 +260,13 @@ export default function FacebookAdAccountsPage() {
                     className="pl-10 w-64"
                   />
                 </div>
-                <Select value={statusFilter.join(',')} onValueChange={(value) => setStatusFilter(value ? value.split(',') : [])}>
+                <Select value={statusFilter.length === 0 ? "all" : statusFilter.join(',')} onValueChange={(value) => setStatusFilter(value === "all" ? [] : value.split(','))}>
                   <SelectTrigger className="w-40">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="Фільтр" />
                   </SelectTrigger>
                   <SelectContent className="bg-background border z-50">
-                    <SelectItem value="">Всі статуси</SelectItem>
+                    <SelectItem value="all">Всі статуси</SelectItem>
                     <SelectItem value="active">Активні</SelectItem>
                     <SelectItem value="risk_payment">RISK_PAYMENT</SelectItem>
                     <SelectItem value="disabled">Відключені</SelectItem>
