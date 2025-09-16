@@ -13,7 +13,8 @@ from typing import List, Dict, Any, Optional
 import os
 
 # Import route modules
-from .routes import campaigns, predictions, analytics
+from .routes import campaigns, analytics, facebook_accounts
+# from .routes import predictions  # Temporary disabled due to ML dependencies
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,8 +35,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite dev server
         "http://localhost:3000",  # Alternative React dev server
+        "http://localhost:8082",  # New Vite dev server
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:8082",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -80,9 +83,11 @@ async def system_status():
         )
 
 # Include route modules
-app.include_router(campaigns.router, prefix="/api/campaigns", tags=["campaigns"])
-app.include_router(predictions.router, prefix="/api/predictions", tags=["predictions"])
-app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+# Register route modules
+app.include_router(campaigns.router)
+# app.include_router(predictions.router)  # Temporary disabled due to ML dependencies
+app.include_router(analytics.router)
+app.include_router(facebook_accounts.router)
 
 # Global exception handler
 @app.exception_handler(Exception)

@@ -1,8 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue                        <div className="font-medium">{account.name} ({account.facebook_id})</div>
+                        {account.cookies_loaded && (
+                          <Badge variant="secondary" className="text-xs">Cookie</Badge>
+                        )}
+                        <div className="text-sm text-muted-foreground">
+                          Основной кабинет: <strong>{account.primary_cabinet}</strong>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          <strong>({account.primary_cabinet_id})</strong>{' '}
+                          <Button variant="link" size="sm" className="h-auto p-0 text-xs">
+                            Все кабинеты ({account.total_cabinets})
+                          </Button>
+                        </div>mponents/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,53 +26,74 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, Search, Edit, Trash2, Settings, BarChart3, Users, MessageSquare, MoreVertical } from 'lucide-react';
 import { useTranslations } from '@/lib/translations';
 
-interface FacebookAccount {
-  id: string;
-  name: string;
-  facebookId: string;
-  group?: string;
-  status: 'active' | 'inactive' | 'banned';
-  tokenStatus: 'active' | 'expired' | 'invalid';
-  balance?: string;
-  dailyLimit?: string;
-  cookiesLoaded: boolean;
-  primaryCabinet: string;
-  primaryCabinetId: string;
-  totalCabinets: number;
-}
+const API_BASE_URL = 'http://localhost:8001/api';
 
-const mockAccounts: FacebookAccount[] = [
-  {
-    id: '18679684',
-    name: 'seesf',
-    facebookId: '100084267251976',
-    status: 'active',
-    tokenStatus: 'active',
-    balance: '825300 IDR',
-    dailyLimit: '825300 IDR/день',
-    cookiesLoaded: true,
-    primaryCabinet: 'Yus Supriyadi',
-    primaryCabinetId: '429902116796948',
-    totalCabinets: 15,
-  },
-];
+interface FacebookAccount {
+  id: number;
+  name: string;
+  facebook_id: string;
+  group_name?: string;
+  status: 'active' | 'inactive' | 'banned';
+  token_status: 'active' | 'expired' | 'invalid';
+  balance?: string;
+  daily_limit?: string;
+  cookies_loaded: boolean;
+  primary_cabinet?: string;
+  primary_cabinet_id?: string;
+  total_cabinets: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function FacebookAccountsPage() {
   const t = useTranslations();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [accounts, setAccounts] = useState<FacebookAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch accounts from API
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const params = new URLSearchParams();
+        if (selectedGroup && selectedGroup !== 'all') {
+          params.append('group_name', selectedGroup);
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/facebook/accounts?${params}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch accounts: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setAccounts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch accounts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccounts();
+  }, [selectedGroup]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedAccounts(mockAccounts.map(acc => acc.id));
+      setSelectedAccounts(accounts.map(acc => acc.id));
     } else {
       setSelectedAccounts([]);
     }
   };
 
-  const handleSelectAccount = (accountId: string, checked: boolean) => {
+  const handleSelectAccount = (accountId: number, checked: boolean) => {
     if (checked) {
       setSelectedAccounts([...selectedAccounts, accountId]);
     } else {
@@ -223,7 +256,7 @@ export default function FacebookAccountsPage() {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedAccounts.length === mockAccounts.length}
+                      checked={selectedAccounts.length === accounts.length}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
@@ -237,7 +270,26 @@ export default function FacebookAccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockAccounts.map((account) => (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      Завантаження...
+                    </TableCell>
+                  </TableRow>
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-red-500">
+                      Помилка: {error}
+                    </TableCell>
+                  </TableRow>
+                ) : accounts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      Немає акаунтів
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  accounts.map((account) => (
                   <TableRow key={account.id}>
                     <TableCell>
                       <Checkbox
