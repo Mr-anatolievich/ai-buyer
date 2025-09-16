@@ -24,7 +24,9 @@ import {
   Terminal, 
   Settings,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  Globe,
+  Share
 } from 'lucide-react';
 import { useTranslations } from '@/lib/translations';
 import { Separator } from '@/components/ui/separator';
@@ -40,7 +42,14 @@ export function AppSidebar() {
     { title: t.autoupload, url: '/autoupload', icon: Upload },
     { title: t.statistics, url: '/statistics', icon: BarChart3 },
     { title: t.creatives, url: '/creatives', icon: Image },
-    { title: t.facebookAccounts, url: '/facebook-accounts', icon: Users },
+  ];
+
+  const facebookItems = [
+    { title: t.accounts, url: '/facebook-accounts', icon: Users },
+    { title: t.adAccounts, url: '/facebook-ad-accounts', icon: CreditCard },
+    { title: t.pages, url: '/facebook-pages', icon: Globe },
+    { title: t.proxyManagement, url: '/facebook-proxy', icon: Share },
+    { title: t.groupsManagement, url: '/facebook-groups', icon: UsersIcon },
   ];
 
   const analyticsItems = [
@@ -115,6 +124,9 @@ export function AppSidebar() {
       
       <SidebarContent className="p-1.5 space-y-1 overflow-hidden">
         {renderMenuSection(mainItems, 'Main', LayoutDashboard)}
+        
+        <div className="h-px bg-sidebar-border/30 mx-2" />
+        {renderMenuSection(facebookItems, t.facebookAccounts, Bot)}
         
         <div className="h-px bg-sidebar-border/30 mx-2" />
         {renderMenuSection(analyticsItems, 'Analytics', TrendingUp)}

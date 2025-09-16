@@ -15,6 +15,12 @@ export interface TranslationKeys {
   console: string;
   settings: string;
   
+  // Facebook section
+  adAccounts: string;
+  pages: string;
+  proxyManagement: string;
+  groupsManagement: string;
+  
   // Header
   profile: string;
   signOut: string;
@@ -137,6 +143,12 @@ const translations: Record<Language, TranslationKeys> = {
     console: 'Console',
     settings: 'Settings',
     
+    // Facebook section
+    adAccounts: 'Ad Accounts',
+    pages: 'Pages',
+    proxyManagement: 'Proxy Management',
+    groupsManagement: 'Groups Management',
+    
     // Header
     profile: 'Profile',
     signOut: 'Sign Out',
@@ -258,6 +270,12 @@ const translations: Record<Language, TranslationKeys> = {
     console: 'Консоль',
     settings: 'Налаштування',
     
+    // Facebook section
+    adAccounts: 'Рекламні кабінети',
+    pages: 'Сторінки',
+    proxyManagement: 'Управління проксі',
+    groupsManagement: 'Управління групами',
+    
     // Header
     profile: 'Профіль',
     signOut: 'Вийти',
@@ -378,6 +396,12 @@ const translations: Record<Language, TranslationKeys> = {
     billings: 'Биллинг',
     console: 'Консоль',
     settings: 'Настройки',
+    
+    // Facebook section
+    adAccounts: 'Рекламные кабинеты',
+    pages: 'Страницы',
+    proxyManagement: 'Управление прокси',
+    groupsManagement: 'Управление группами',
     
     // Header
     profile: 'Профиль',
