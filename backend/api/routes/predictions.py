@@ -9,8 +9,8 @@ from typing import Dict, List, Any, Optional
 import logging
 from datetime import datetime
 
-# from ..ml.models.ctr_predictor import CTRPredictor
-# from ..ml.models.budget_optimizer import BudgetOptimizer
+from ..ml.models.ctr_predictor import CTRPredictor
+from ..ml.models.budget_optimizer import BudgetOptimizer
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -56,7 +56,7 @@ async def predict_ctr(request: CTRPredictionRequest, user_id: str = "default"):
         logger.info(f"CTR prediction request for user {user_id}, campaign {request.campaign_id}")
         
         # Initialize predictor
-        # predictor = CTRPredictor(user_id)
+        predictor = CTRPredictor(user_id)
         
         # Prepare campaign data
         campaign_data = {
@@ -108,18 +108,17 @@ async def optimize_budget(request: BudgetOptimizationRequest, background_tasks: 
         logger.info(f"Budget optimization for user {request.user_id}, {len(request.campaigns)} campaigns")
         
         # Initialize optimizer
-        # optimizer = BudgetOptimizer(request.user_id)
+        optimizer = BudgetOptimizer(request.user_id)
         
         # Check if models are trained
-        # TODO: Implement actual ML optimization
-        # if not optimizer.is_trained:
-        #     try:
-        #         optimizer.load_models()
-        #     except Exception:
-        #         raise HTTPException(
-        #             status_code=400, 
-        #             detail="Models not trained for this user. Please train models first."
-        #         )
+        if not optimizer.is_trained:
+            try:
+                optimizer.load_models()
+            except Exception:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Models not trained for this user. Please train models first."
+                )
         
         # Run optimization
         result = optimizer.optimize_budget_allocation(
@@ -169,7 +168,7 @@ async def train_models(user_id: str, background_tasks: BackgroundTasks):
 async def train_user_models(user_id: str):
     """Background task to train ML models"""
     try:
-        # from ..ml.training.trainer import MLTrainingPipeline
+        from ..ml.training.trainer import MLTrainingPipeline
         
         # This would fetch user's data from ClickHouse
         # For now, using mock data
@@ -203,16 +202,10 @@ async def train_user_models(user_id: str):
 async def get_model_status(user_id: str = "default"):
     """Get status of ML models for user"""
     try:
-        # from ..ml.training.trainer import MLTrainingPipeline
+        from ..ml.training.trainer import MLTrainingPipeline
         
-        # trainer = MLTrainingPipeline(user_id)
-        # status = trainer.get_model_status()
-        
-        # TODO: Implement actual model status
-        status = {
-            "ctr_model": {"status": "not_trained", "last_trained": None},
-            "budget_model": {"status": "not_trained", "last_trained": None}
-        }
+        trainer = MLTrainingPipeline(user_id)
+        status = trainer.get_model_status()
         
         return status
         

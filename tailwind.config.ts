@@ -1,11 +1,12 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
 	content: [
-		"./frontend/src/**/*.{ts,tsx}",
-		"./frontend/index.html",
+		"./pages/**/*.{ts,tsx}",
+		"./components/**/*.{ts,tsx}",
+		"./app/**/*.{ts,tsx}",
+		"./src/**/*.{ts,tsx}",
 		"./index.html",
 	],
 	prefix: "",
@@ -117,5 +118,5 @@ export default {
 			}
 		}
 	},
-	plugins: [tailwindcssAnimate],
+	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
