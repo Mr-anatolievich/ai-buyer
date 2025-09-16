@@ -13,7 +13,10 @@ from typing import List, Dict, Any, Optional
 import os
 
 # Import route modules
-from .routes import campaigns, predictions, analytics
+from .routes import campaigns, predictions, analytics, facebook_accounts
+
+# Import database setup
+from ..database import init_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -34,8 +37,14 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite dev server
         "http://localhost:3000",  # Alternative React dev server
+        "http://localhost:8080",  # Frontend dev server
+        "http://localhost:8081",  # Frontend dev server
+        "http://localhost:8082",  # Frontend dev server
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+        "http://127.0.0.1:8081",
+        "http://127.0.0.1:8082",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -83,6 +92,7 @@ async def system_status():
 app.include_router(campaigns.router, prefix="/api/campaigns", tags=["campaigns"])
 app.include_router(predictions.router, prefix="/api/predictions", tags=["predictions"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(facebook_accounts.router, tags=["facebook"])  # Prefix включений в router
 
 # Global exception handler
 @app.exception_handler(Exception)
@@ -97,7 +107,14 @@ async def global_exception_handler(request, exc):
 @app.on_event("startup")
 async def startup_event():
     logger.info("AI-Buyer ML Service starting up...")
-    # TODO: Initialize ML models, database connections, etc.
+    # Initialize database
+    try:
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+    # TODO: Initialize ML models, connections, etc.
 
 # Shutdown event
 @app.on_event("shutdown")

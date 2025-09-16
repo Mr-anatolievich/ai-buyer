@@ -3,6 +3,29 @@ console.log("🤖 AI-Buyer: Background script loaded");
 
 let extractedData = null;
 
+// Функція для перевірки, чи завантажений content script
+async function ensureContentScriptLoaded(tabId) {
+  try {
+    const response = await chrome.tabs.sendMessage(tabId, { action: "ping" });
+    return response && response.success;
+  } catch (error) {
+    console.log("Content script не завантажений, інжектуємо...");
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ["content.js"],
+      });
+
+      // Дамо час на ініціалізацію
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return true;
+    } catch (injectError) {
+      console.error("Помилка інжекції content script:", injectError);
+      return false;
+    }
+  }
+}
+
 // Слухач повідомлень від content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("📨 Background received message:", request);

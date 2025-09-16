@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Buyer Facebook Accounts Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .accounts-list {
+            margin-top: 20px;
+        }
+        .account-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI-Buyer Facebook Accounts Manager</h1>
+        <p>Тестування інтеграції з браузерним розширенням та базою даних</p>
+        
+        <div class="form-group">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:8001" placeholder="http://localhost:8001">
+        </div>
+        
+        <h2>📝 Додати акаунт з Multitoken</h2>
+        <div class="form-group">
+            <label for="accountName">Назва акаунта:</label>
+            <input type="text" id="accountName" placeholder="Моя_назва_акаунта">
+        </div>
+        
+        <div class="form-group">
+            <label for="multitoken">Multitoken (Base64):</label>
+            <textarea id="multitoken" rows="3" placeholder="Вставте multitoken з браузерного розширення"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="groupName">Група:</label>
+            <input type="text" id="groupName" value="default" placeholder="default">
+        </div>
+        
+        <div class="form-group">
+            <label for="proxyUrl">Proxy URL (опціонально):</label>
+            <input type="text" id="proxyUrl" placeholder="http://username:password@proxy:port">
+        </div>
+        
+        <button onclick="createAccount()">➕ Додати акаунт</button>
+        <button onclick="loadAccounts()">🔄 Оновити список</button>
+        <button onclick="generateTestMultitoken()">🧪 Згенерувати тестовий multitoken</button>
+        
+        <div id="message"></div>
+        
+        <div class="accounts-list">
+            <h2>📋 Список акаунтів</h2>
+            <div id="accountsList">
+                <p>Завантаження...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = () => document.getElementById('apiUrl').value;
+        
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => messageDiv.innerHTML = '', 5000);
+        }
+        
+        function generateTestMultitoken() {
+            const testData = {
+                token: 'EAABwzLixnjYBOtest' + Math.random().toString().substr(2, 10),
+                ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Test Browser',
+                cookies: [
+                    {
+                        name: 'c_user',
+                        value: Math.random().toString().substr(2, 9),
+                        domain: '.facebook.com',
+                        path: '/',
+                        httpOnly: true
+                    },
+                    {
+                        name: 'xs',
+                        value: 'test_xs_' + Math.random().toString().substr(2, 10),
+                        domain: '.facebook.com',
+                        path: '/',
+                        httpOnly: true
+                    },
+                    {
+                        name: 'datr',
+                        value: 'test_datr_' + Math.random().toString().substr(2, 10),
+                        domain: '.facebook.com',
+                        path: '/',
+                        httpOnly: true
+                    }
+                ]
+            };
+            
+            const encoded = btoa(JSON.stringify(testData));
+            document.getElementById('multitoken').value = encoded;
+            document.getElementById('accountName').value = 'test_account_' + Math.random().toString().substr(2, 6);
+            showMessage('🧪 Тестовий multitoken згенеровано!');
+        }
+        
+        async function createAccount() {
+            const name = document.getElementById('accountName').value;
+            const multitoken = document.getElementById('multitoken').value;
+            const groupName = document.getElementById('groupName').value || 'default';
+            const proxyUrl = document.getElementById('proxyUrl').value || null;
+            
+            if (!name || !multitoken) {
+                showMessage('❌ Заповніть назву акаунта та multitoken', true);
+                return;
+            }
+            
+            try {
+                const params = new URLSearchParams({
+                    name: name,
+                    multitoken: multitoken,
+                    group_name: groupName
+                });
+                
+                if (proxyUrl) {
+                    params.append('proxy_url', proxyUrl);
+                }
+                
+                const response = await fetch(`${apiUrl()}/api/facebook/accounts/multitoken?${params}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const account = await response.json();
+                    showMessage(`✅ Акаунт "${account.name}" успішно створено! ID: ${account.id}`);
+                    
+                    // Очищаємо форму
+                    document.getElementById('accountName').value = '';
+                    document.getElementById('multitoken').value = '';
+                    document.getElementById('proxyUrl').value = '';
+                    
+                    // Оновлюємо список
+                    loadAccounts();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Помилка: ${error.detail}`, true);
+                }
+            } catch (error) {
+                showMessage(`❌ Помилка з'єднання: ${error.message}`, true);
+            }
+        }
+        
+        async function loadAccounts() {
+            try {
+                const response = await fetch(`${apiUrl()}/api/facebook/accounts`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayAccounts(data.accounts);
+                } else {
+                    showMessage('❌ Не вдалося завантажити акаунти', true);
+                }
+            } catch (error) {
+                showMessage(`❌ Помилка з'єднання: ${error.message}`, true);
+                document.getElementById('accountsList').innerHTML = 
+                    '<p>❌ Помилка завантаження. Переконайтеся що сервер запущений.</p>';
+            }
+        }
+        
+        function displayAccounts(accounts) {
+            const accountsList = document.getElementById('accountsList');
+            
+            if (accounts.length === 0) {
+                accountsList.innerHTML = '<p>📭 Акаунтів поки немає</p>';
+                return;
+            }
+            
+            const accountsHtml = accounts.map(account => `
+                <div class="account-card">
+                    <h3>${account.name} <span class="status ${account.status}">${account.status}</span></h3>
+                    <p><strong>Facebook ID:</strong> ${account.facebook_id}</p>
+                    <p><strong>Група:</strong> ${account.group_name}</p>
+                    <p><strong>Створено:</strong> ${new Date(account.created_at).toLocaleString()}</p>
+                    <p><strong>User Agent:</strong> ${account.user_agent}</p>
+                    <p><strong>Cookies завантажені:</strong> ${account.cookies_loaded ? '✅' : '❌'}</p>
+                    <button onclick="deleteAccount(${account.id}, '${account.name}')">🗑️ Видалити</button>
+                </div>
+            `).join('');
+            
+            accountsList.innerHTML = accountsHtml;
+        }
+        
+        async function deleteAccount(id, name) {
+            if (!confirm(`Видалити акаунт "${name}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiUrl()}/api/facebook/accounts/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage(`✅ Акаунт "${name}" видалено`);
+                    loadAccounts();
+                } else {
+                    showMessage('❌ Помилка видалення', true);
+                }
+            } catch (error) {
+                showMessage(`❌ Помилка з'єднання: ${error.message}`, true);
+            }
+        }
+        
+        // Завантажуємо акаунти при початковому завантаженні сторінки
+        window.onload = () => {
+            loadAccounts();
+        };
+    </script>
+</body>
+</html>

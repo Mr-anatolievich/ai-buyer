@@ -16,35 +16,22 @@ import { Plus, Search, Edit, Trash2, Settings, BarChart3, Users, MessageSquare, 
 import { useTranslations } from '@/lib/translations';
 
 interface FacebookAccount {
-  id: string;
+  id: number;
   name: string;
-  facebookId: string;
-  group?: string;
-  status: 'active' | 'inactive' | 'banned';
-  tokenStatus: 'active' | 'expired' | 'invalid';
-  balance?: string;
-  dailyLimit?: string;
-  cookiesLoaded: boolean;
-  primaryCabinet: string;
-  primaryCabinetId: string;
-  totalCabinets: number;
+  facebook_id: string;
+  group_name?: string;
+  status: 'active' | 'inactive' | 'banned' | 'error';
+  token_status: 'active' | 'expired' | 'invalid' | 'unknown';
+  balance?: number;
+  daily_limit?: number;
+  cookies_loaded: boolean;
+  primary_cabinet?: string;
+  primary_cabinet_id?: string;
+  total_cabinets: number;
+  created_at: string;
+  user_agent: string;
+  access_token: string;
 }
-
-const mockAccounts: FacebookAccount[] = [
-  {
-    id: '18679684',
-    name: 'seesf',
-    facebookId: '100084267251976',
-    status: 'active',
-    tokenStatus: 'active',
-    balance: '825300 IDR',
-    dailyLimit: '825300 IDR/день',
-    cookiesLoaded: true,
-    primaryCabinet: 'Yus Supriyadi',
-    primaryCabinetId: '429902116796948',
-    totalCabinets: 15,
-  },
-];
 
 export default function FacebookAccountsPage() {
   const t = useTranslations();
@@ -53,6 +40,11 @@ export default function FacebookAccountsPage() {
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [accounts, setAccounts] = useState<FacebookAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const API_BASE_URL = 'http://localhost:8001';
   
   // Стан для даних з multitoken
   const [newAccountData, setNewAccountData] = useState({
@@ -63,6 +55,32 @@ export default function FacebookAccountsPage() {
     group: 'default',
     proxy: ''
   });
+
+  // Завантаження акаунтів з API
+  const loadAccounts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/facebook/accounts`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAccounts(data.accounts || []);
+      } else {
+        console.error('Помилка завантаження акаунтів:', response.status);
+        setAccounts([]);
+      }
+    } catch (error) {
+      console.error('Помилка з\'єднання з API:', error);
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Завантажуємо акаунти при першому завантаженні
+  useEffect(() => {
+    loadAccounts();
+  }, []);
 
   // Обробка multitoken параметра з URL
   useEffect(() => {
@@ -91,7 +109,7 @@ export default function FacebookAccountsPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedAccounts(mockAccounts.map(acc => acc.id));
+      setSelectedAccounts(accounts.map(acc => acc.id.toString()));
     } else {
       setSelectedAccounts([]);
     }
@@ -107,6 +125,8 @@ export default function FacebookAccountsPage() {
 
   const handleSaveAccount = async () => {
     try {
+      setSaving(true);
+      
       // Валідація
       if (!newAccountData.name.trim()) {
         alert('Введіть назву акаунта');
@@ -117,29 +137,71 @@ export default function FacebookAccountsPage() {
         return;
       }
 
-      // Тут буде API запит для збереження акаунта
-      console.log('Збереження акаунта:', newAccountData);
+      // Створюємо multitoken для API
+      const multitokenData = {
+        token: newAccountData.token,
+        ua: newAccountData.userAgent || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        cookies: newAccountData.cookies ? JSON.parse(newAccountData.cookies) : [
+          { name: 'c_user', value: '123456789', domain: '.facebook.com', path: '/', httpOnly: true },
+          { name: 'xs', value: 'session_value', domain: '.facebook.com', path: '/', httpOnly: true },
+          { name: 'datr', value: 'fingerprint_value', domain: '.facebook.com', path: '/', httpOnly: true }
+        ]
+      };
+
+      const multitoken = btoa(JSON.stringify(multitokenData));
       
-      // Показуємо успішне повідомлення
-      alert('Акаунт успішно додано!');
-      
-      // Очищаємо форму та закриваємо модальне вікно
-      setNewAccountData({
-        name: '',
-        token: '',
-        userAgent: '',
-        cookies: '',
-        group: 'default',
-        proxy: ''
+      // API запит для створення акаунта
+      const params = new URLSearchParams({
+        name: newAccountData.name,
+        multitoken: multitoken,
+        group_name: newAccountData.group || 'default'
       });
-      setShowAddModal(false);
-      
-      // Перенаправляємо на головну сторінку акаунтів (очищаємо URL від multitoken)
-      window.history.pushState({}, '', '/accounts');
+
+      if (newAccountData.proxy) {
+        params.append('proxy_url', newAccountData.proxy);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/facebook/accounts/multitoken?${params}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const createdAccount = await response.json();
+        console.log('Акаунт створено:', createdAccount);
+        
+        // Показуємо успішне повідомлення
+        alert(`Акаунт "${createdAccount.name}" успішно додано!`);
+        
+        // Очищаємо форму та закриваємо модальне вікно
+        setNewAccountData({
+          name: '',
+          token: '',
+          userAgent: '',
+          cookies: '',
+          group: 'default',
+          proxy: ''
+        });
+        setShowAddModal(false);
+        
+        // Перезавантажуємо список акаунтів
+        await loadAccounts();
+        
+        // Перенаправляємо на головну сторінку акаунтів (очищаємо URL від multitoken)
+        window.history.pushState({}, '', '/accounts');
+      } else {
+        const error = await response.json();
+        console.error('Помилка API:', error);
+        alert(`Помилка: ${error.detail}`);
+      }
       
     } catch (error) {
       console.error('Помилка збереження акаунта:', error);
       alert('Помилка збереження акаунта');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -300,9 +362,16 @@ export default function FacebookAccountsPage() {
                     <Button 
                       className="flex-1"
                       onClick={handleSaveAccount}
-                      disabled={!newAccountData.name.trim() || !newAccountData.token.trim()}
+                      disabled={saving || !newAccountData.name.trim() || !newAccountData.token.trim()}
                     >
-                      Добавить
+                      {saving ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                          <span>Збереження...</span>
+                        </div>
+                      ) : (
+                        'Добавить'
+                      )}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -336,7 +405,7 @@ export default function FacebookAccountsPage() {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedAccounts.length === mockAccounts.length}
+                      checked={selectedAccounts.length === accounts.length}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
@@ -350,12 +419,32 @@ export default function FacebookAccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockAccounts.map((account) => (
-                  <TableRow key={account.id}>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                        <span>Завантаження акаунтів...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : accounts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="text-muted-foreground">
+                        <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>Акаунтів поки немає</p>
+                        <p className="text-sm">Додайте перший акаунт, натиснувши кнопку "Додати аккаунт"</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  accounts.map((account) => (
+                    <TableRow key={account.id}>
                     <TableCell>
                       <Checkbox
-                        checked={selectedAccounts.includes(account.id)}
-                        onCheckedChange={(checked) => handleSelectAccount(account.id, checked as boolean)}
+                        checked={selectedAccounts.includes(account.id.toString())}
+                        onCheckedChange={(checked) => handleSelectAccount(account.id.toString(), checked as boolean)}
                       />
                     </TableCell>
                     <TableCell>
@@ -363,35 +452,36 @@ export default function FacebookAccountsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="font-medium">{account.name} ({account.facebookId})</div>
-                        {account.cookiesLoaded && (
+                        <div className="font-medium">{account.name} ({account.facebook_id})</div>
+                        {account.cookies_loaded && (
                           <Badge variant="secondary" className="text-xs">Куки загружены</Badge>
                         )}
                         <div className="text-sm text-muted-foreground">
-                          Основной кабинет: <strong>{account.primaryCabinet}</strong>
+                          Основной кабинет: <strong>{account.primary_cabinet || 'Не указан'}</strong>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          <strong>({account.primaryCabinetId})</strong>{' '}
+                          <strong>({account.primary_cabinet_id || 'N/A'})</strong>{' '}
                           <Badge variant="outline" className="text-xs">
-                            Все кабинеты ({account.totalCabinets})
+                            Все кабинеты ({account.total_cabinets})
                           </Badge>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="text-primary">—</span>
+                      <span className="text-primary">{account.group_name || '—'}</span>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1 text-sm">
                         {account.balance && <div><strong>Баланс:</strong> {account.balance}</div>}
-                        {account.dailyLimit && <div><strong>Лимит:</strong> {account.dailyLimit}</div>}
+                        {account.daily_limit && <div><strong>Лимит:</strong> {account.daily_limit}</div>}
+                        {!account.balance && !account.daily_limit && <span className="text-muted-foreground">Не указано</span>}
                       </div>
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(account.status)}
                     </TableCell>
                     <TableCell>
-                      {getStatusBadge(account.tokenStatus)}
+                      {getStatusBadge(account.token_status)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
@@ -429,7 +519,8 @@ export default function FacebookAccountsPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

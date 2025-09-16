@@ -129,6 +129,11 @@ function createMultiToken(token, cookies, userAgent) {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("📨 Отримано повідомлення:", request);
 
+  if (request.action === "ping") {
+    sendResponse({ success: true, message: "Content script активний" });
+    return true;
+  }
+
   if (request.action === "extractData") {
     try {
       const token = extractAccessToken();
