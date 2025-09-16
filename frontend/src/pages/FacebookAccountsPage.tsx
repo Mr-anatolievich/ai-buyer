@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,10 +48,46 @@ const mockAccounts: FacebookAccount[] = [
 
 export default function FacebookAccountsPage() {
   const t = useTranslations();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('all');
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  // Стан для даних з multitoken
+  const [newAccountData, setNewAccountData] = useState({
+    name: '',
+    token: '',
+    userAgent: '',
+    cookies: '',
+    group: 'default',
+    proxy: ''
+  });
+
+  // Обробка multitoken параметра з URL
+  useEffect(() => {
+    const multitokenParam = searchParams.get('multitoken');
+    if (multitokenParam) {
+      try {
+        // Декодуємо base64
+        const decodedData = JSON.parse(atob(multitokenParam));
+        
+        // Заповнюємо поля форми
+        setNewAccountData(prev => ({
+          ...prev,
+          token: decodedData.token || '',
+          userAgent: decodedData.ua || '',
+          cookies: JSON.stringify(decodedData.cookies || [], null, 2),
+          name: `Facebook Account ${Date.now()}` // Автоматична назва
+        }));
+        
+        // Автоматично відкриваємо модальне вікно
+        setShowAddModal(true);
+      } catch (error) {
+        console.error('Помилка декодування multitoken:', error);
+      }
+    }
+  }, [searchParams]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -65,6 +102,44 @@ export default function FacebookAccountsPage() {
       setSelectedAccounts([...selectedAccounts, accountId]);
     } else {
       setSelectedAccounts(selectedAccounts.filter(id => id !== accountId));
+    }
+  };
+
+  const handleSaveAccount = async () => {
+    try {
+      // Валідація
+      if (!newAccountData.name.trim()) {
+        alert('Введіть назву акаунта');
+        return;
+      }
+      if (!newAccountData.token.trim()) {
+        alert('Введіть токен');
+        return;
+      }
+
+      // Тут буде API запит для збереження акаунта
+      console.log('Збереження акаунта:', newAccountData);
+      
+      // Показуємо успішне повідомлення
+      alert('Акаунт успішно додано!');
+      
+      // Очищаємо форму та закриваємо модальне вікно
+      setNewAccountData({
+        name: '',
+        token: '',
+        userAgent: '',
+        cookies: '',
+        group: 'default',
+        proxy: ''
+      });
+      setShowAddModal(false);
+      
+      // Перенаправляємо на головну сторінку акаунтів (очищаємо URL від multitoken)
+      window.history.pushState({}, '', '/accounts');
+      
+    } catch (error) {
+      console.error('Помилка збереження акаунта:', error);
+      alert('Помилка збереження акаунта');
     }
   };
 
@@ -134,43 +209,64 @@ export default function FacebookAccountsPage() {
                 <div className="grid gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="account-name">Название</Label>
-                    <Input id="account-name" placeholder="Техническое название" />
+                    <Input 
+                      id="account-name" 
+                      placeholder="Техническое название"
+                      value={newAccountData.name}
+                      onChange={(e) => setNewAccountData(prev => ({ ...prev, name: e.target.value }))}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="token">Токен</Label>
-                    <Input id="token" placeholder="Токен аккаунта" />
+                    <Input 
+                      id="token" 
+                      placeholder="Токен аккаунта"
+                      value={newAccountData.token}
+                      onChange={(e) => setNewAccountData(prev => ({ ...prev, token: e.target.value }))}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="useragent">UserAgent</Label>
-                    <Input id="useragent" />
+                    <Input 
+                      id="useragent"
+                      value={newAccountData.userAgent}
+                      onChange={(e) => setNewAccountData(prev => ({ ...prev, userAgent: e.target.value }))}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="proxy">Прокси</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите прокси" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">Новый прокси</SelectItem>
-                        <SelectItem value="existing">Существующий прокси</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input 
+                      id="proxy" 
+                      placeholder="http://user:pass@ip:port"
+                      value={newAccountData.proxy}
+                      onChange={(e) => setNewAccountData(prev => ({ ...prev, proxy: e.target.value }))}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="group">Группа</Label>
-                    <Select>
+                    <Select 
+                      value={newAccountData.group} 
+                      onValueChange={(value) => setNewAccountData(prev => ({ ...prev, group: value }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Выберите группу" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="no">Без группы</SelectItem>
-                        <SelectItem value="new">Новая группа</SelectItem>
+                        <SelectItem value="default">Без группы</SelectItem>
+                        <SelectItem value="test">Тестовая группа</SelectItem>
+                        <SelectItem value="main">Основная группа</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="cookies">Cookie</Label>
-                    <Textarea id="cookies" placeholder="Cookie в формате JSON" />
+                    <Textarea 
+                      id="cookies" 
+                      placeholder="Cookie в формате JSON"
+                      value={newAccountData.cookies}
+                      onChange={(e) => setNewAccountData(prev => ({ ...prev, cookies: e.target.value }))}
+                      className="min-h-[100px] font-mono text-sm"
+                    />
                   </div>
                   
                   {/* Auto-clean comments */}
@@ -201,8 +297,25 @@ export default function FacebookAccountsPage() {
                   </div>
                   
                   <div className="flex gap-2 pt-4">
-                    <Button className="flex-1">Добавить</Button>
-                    <Button variant="outline" onClick={() => setShowAddModal(false)}>Закрыть</Button>
+                    <Button 
+                      className="flex-1"
+                      onClick={handleSaveAccount}
+                      disabled={!newAccountData.name.trim() || !newAccountData.token.trim()}
+                    >
+                      Добавить
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowAddModal(false);
+                        // Очищаємо URL від multitoken при закритті
+                        if (searchParams.get('multitoken')) {
+                          window.history.pushState({}, '', '/accounts');
+                        }
+                      }}
+                    >
+                      Закрыть
+                    </Button>
                   </div>
                 </div>
               </DialogContent>

@@ -7,7 +7,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Search, Filter, Image as ImageIcon, Video, Eye, Download, Upload } from 'lucide-react';
 
-const MOCK_CREATIVES = [
+interface Creative {
+  id: string;
+  name: string;
+  type: string;
+  thumbnail: string;
+  usage: number;
+  lastUsed: string;
+  performance: string;
+  stats: {
+    impressions: string;
+    ctr: string;
+    conversions: number;
+    cpa: string;
+  };
+}
+
+const MOCK_CREATIVES: Creative[] = [
   {
     id: '1',
     name: 'Summer Dress Hero Video',
@@ -104,7 +120,7 @@ export default function CreativesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [performanceFilter, setPerformanceFilter] = useState<string>('all');
-  const [selectedCreative, setSelectedCreative] = useState<any>(null);
+  const [selectedCreative, setSelectedCreative] = useState<Creative | null>(null);
 
   const filteredCreatives = MOCK_CREATIVES.filter(creative => {
     const matchesSearch = creative.name.toLowerCase().includes(searchTerm.toLowerCase());

@@ -11,7 +11,9 @@
   "host_permissions": [
     "*://*.facebook.com/*",
     "*://*.business.facebook.com/*",
-    "*://*.adsmanager.facebook.com/*"
+    "*://*.adsmanager.facebook.com/*",
+    "http://localhost:*/*",
+    "https://localhost:*/*"
   ],
   "action": {
     "default_popup": "popup.html",

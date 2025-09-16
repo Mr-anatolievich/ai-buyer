@@ -75,7 +75,7 @@ export default function ConsolePage() {
     setOutput([]);
   };
 
-  const getLevelColor = (level: string) => {
+  const getLevelColor = (level: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (level) {
       case 'ERROR':
         return 'destructive';
@@ -124,7 +124,7 @@ export default function ConsolePage() {
                 {MOCK_LOGS.map((log) => (
                   <div key={log.id} className="flex flex-col gap-1 p-2 rounded border">
                     <div className="flex items-center justify-between">
-                      <Badge variant={getLevelColor(log.level) as any} className="text-xs">
+                      <Badge variant={getLevelColor(log.level)} className="text-xs">
                         {log.level}
                       </Badge>
                       <span className="text-xs text-muted-foreground">{log.timestamp}</span>

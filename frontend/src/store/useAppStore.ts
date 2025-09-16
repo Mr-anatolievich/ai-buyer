@@ -186,7 +186,7 @@ export const useAppStore = create<AppState>()(
               draft.adSet.target.ageRange[0] <= draft.adSet.target.ageRange[1]
             );
           
-          case 3: // Ad step
+          case 3: { // Ad step
             const isValidUrl = (url: string) => {
               try {
                 new URL(url);
@@ -202,6 +202,7 @@ export const useAppStore = create<AppState>()(
               draft.ad.destination.websiteUrl.trim() &&
               isValidUrl(draft.ad.destination.websiteUrl)
             );
+          }
           
           default:
             return false;

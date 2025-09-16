@@ -22,12 +22,21 @@ import {
   Edit3
 } from 'lucide-react';
 
+interface FacebookCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+}
+
 interface FacebookAccount {
   id: string;
   name: string;
   token: string;
   userAgent: string;
-  cookies: any[];
+  cookies: FacebookCookie[];
   proxy?: string;
   group?: string;
   status: 'active' | 'inactive' | 'error';
@@ -36,7 +45,7 @@ interface FacebookAccount {
 }
 
 interface MultiTokenData {
-  cookies: any[];
+  cookies: FacebookCookie[];
   ua: string;
   token: string;
 }
@@ -178,8 +187,9 @@ export const FacebookAccountManager: React.FC = () => {
         addAlert('error', `Помилка додавання акаунта: ${error.message}`);
       }
 
-    } catch (error: any) {
-      addAlert('error', `Помилка: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
+      addAlert('error', `Помилка: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -251,8 +261,9 @@ export const FacebookAccountManager: React.FC = () => {
         }
       }
 
-    } catch (error: any) {
-      addAlert('error', `Помилка: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка';
+      addAlert('error', `Помилка: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

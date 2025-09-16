@@ -37,6 +37,7 @@ const App = () => (
             <Route path="creatives" element={<CreativesPage />} />
             <Route path="ai-analyst" element={<AiAnalystPage />} />
             <Route path="accounts" element={<AccountsPage />} />
+            <Route path="accounts/add" element={<FacebookAccountsPage />} />
             <Route path="facebook-accounts" element={<FacebookAccountsPage />} />
             <Route path="team" element={<TeamPage />} />
             <Route path="auto-rules" element={<AutoRulesPage />} />

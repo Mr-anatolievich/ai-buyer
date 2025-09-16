@@ -71,7 +71,7 @@ export function AppSidebar() {
       ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' 
       : 'hover:bg-sidebar-accent/50 text-sidebar-foreground transition-colors duration-150';
 
-  const renderMenuSection = (items: typeof mainItems, label: string, Icon?: React.ComponentType<any>) => (
+  const renderMenuSection = (items: typeof mainItems, label: string, Icon?: React.ComponentType<{ className?: string }>) => (
     <SidebarGroup className="mb-0">
       <SidebarGroupLabel className={`${collapsed ? 'sr-only' : ''} flex items-center gap-1.5 text-sidebar-foreground/60 font-medium px-1 mb-0.5 h-6`}>
         {Icon && <Icon className="w-3 h-3" />}

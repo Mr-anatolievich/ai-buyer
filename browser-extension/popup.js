@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const cookiesCount = document.getElementById("cookiesCount");
   const copyMultiTokenBtn = document.getElementById("copyMultiTokenBtn");
   const sendToAIBuyerBtn = document.getElementById("sendToAIBuyerBtn");
+  const aibuyerUrlInput = document.getElementById("aibuyerUrl");
   const copySuccess = document.getElementById("copySuccess");
 
   let currentData = null;
@@ -114,11 +115,61 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentData.userAgent
       );
 
-      // Відкриваємо AI-Buyer з автозаповненням
-      const aibuyerUrl = `http://localhost:3000/accounts/add?multitoken=${encodeURIComponent(
-        multiToken
-      )}`;
-      chrome.tabs.create({ url: aibuyerUrl });
+      // Отримуємо URL з поля вводу або використовуємо автовизначення
+      const customUrl = aibuyerUrlInput.value.trim();
+
+      if (customUrl) {
+        // Збережемо користувацький URL
+        chrome.storage.local.set({ aibuyerUrl: customUrl });
+
+        // Видаляємо кінцевий слеш якщо він є, щоб уникнути подвійного слеша
+        const baseUrl = customUrl.replace(/\/$/, "");
+        const fullUrl = `${baseUrl}/accounts/add?multitoken=${encodeURIComponent(
+          multiToken
+        )}`;
+        chrome.tabs.create({ url: fullUrl });
+      } else {
+        // Автовизначення: спробуємо знайти працюючий сервер
+        const possibleUrls = [
+          `http://localhost:8080/accounts/add?multitoken=${encodeURIComponent(
+            multiToken
+          )}`,
+          `http://localhost:3000/accounts/add?multitoken=${encodeURIComponent(
+            multiToken
+          )}`,
+          `http://localhost:5173/accounts/add?multitoken=${encodeURIComponent(
+            multiToken
+          )}`,
+          `http://localhost:4173/accounts/add?multitoken=${encodeURIComponent(
+            multiToken
+          )}`,
+        ];
+
+        let workingUrl = null;
+        for (const url of possibleUrls) {
+          try {
+            const baseUrl = url.split("/accounts")[0];
+            const response = await fetch(baseUrl, {
+              method: "HEAD",
+              signal: AbortSignal.timeout(2000), // 2 секунди timeout
+            });
+            if (response.ok || response.status === 404) {
+              // 404 означає що сервер працює
+              workingUrl = url;
+              break;
+            }
+          } catch (error) {
+            continue; // Спробуємо наступний URL
+          }
+        }
+
+        if (workingUrl) {
+          chrome.tabs.create({ url: workingUrl });
+        } else {
+          // Якщо жоден сервер не відповідає, використовуємо стандартний порт
+          chrome.tabs.create({ url: possibleUrls[0] });
+        }
+      }
     } catch (error) {
       console.error("Помилка відправки:", error);
       alert("Помилка відправки в AI-Buyer");
@@ -149,7 +200,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Перевірка збережених даних
-  chrome.storage.local.get(["lastFoundToken"], (result) => {
+  chrome.storage.local.get(["lastFoundToken", "aibuyerUrl"], (result) => {
     if (result.lastFoundToken) {
       const data = result.lastFoundToken;
       const age = Date.now() - data.timestamp;
@@ -159,6 +210,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         status.className = "status success";
         status.textContent = "🎉 Останній токен знайдено автоматично!";
       }
+    }
+
+    // Завантажуємо збережений URL
+    if (result.aibuyerUrl) {
+      aibuyerUrlInput.value = result.aibuyerUrl;
     }
   });
 });

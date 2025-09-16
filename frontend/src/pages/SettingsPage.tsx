@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Settings, User, Bell, Shield, CreditCard, Globe } from 'lucide-react';
-import { useAppStore } from '@/store/useAppStore';
+import { useAppStore, Language } from '@/store/useAppStore';
 
 export default function SettingsPage() {
   const { user, language, setLanguage } = useAppStore();
@@ -175,7 +175,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Language</Label>
-                <Select value={language} onValueChange={(value: any) => setLanguage(value)}>
+                <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
