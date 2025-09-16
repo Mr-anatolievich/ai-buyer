@@ -40,6 +40,7 @@ export function AppSidebar() {
     { title: t.autoupload, url: '/autoupload', icon: Upload },
     { title: t.statistics, url: '/statistics', icon: BarChart3 },
     { title: t.creatives, url: '/creatives', icon: Image },
+    { title: t.facebookAccounts, url: '/facebook-accounts', icon: Users },
   ];
 
   const analyticsItems = [

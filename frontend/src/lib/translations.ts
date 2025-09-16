@@ -8,6 +8,7 @@ export interface TranslationKeys {
   creatives: string;
   aiAnalyst: string;
   accounts: string;
+  facebookAccounts: string;
   team: string;
   autoRules: string;
   billings: string;
@@ -129,6 +130,7 @@ const translations: Record<Language, TranslationKeys> = {
     creatives: 'Creatives',
     aiAnalyst: 'AI Analyst',
     accounts: 'Accounts',
+    facebookAccounts: 'Facebook Accounts',
     team: 'Team',
     autoRules: 'Auto Rules',
     billings: 'Billings',
@@ -249,6 +251,7 @@ const translations: Record<Language, TranslationKeys> = {
     creatives: 'Креативи',
     aiAnalyst: 'ШІ Аналітик',
     accounts: 'Акаунти',
+    facebookAccounts: 'Аккаунти Facebook',
     team: 'Команда',
     autoRules: 'Авто правила',
     billings: 'Біллінг',
@@ -369,6 +372,7 @@ const translations: Record<Language, TranslationKeys> = {
     creatives: 'Креативы',
     aiAnalyst: 'ИИ Аналитик',
     accounts: 'Аккаунты',
+    facebookAccounts: 'Аккаунты Facebook',
     team: 'Команда',
     autoRules: 'Авто правила',
     billings: 'Биллинг',
