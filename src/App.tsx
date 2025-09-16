@@ -12,6 +12,7 @@ import CreativesPage from "./pages/CreativesPage";
 import AiAnalystPage from "./pages/AiAnalystPage";
 import AccountsPage from "./pages/AccountsPage";
 import FacebookAccountsPage from "./pages/FacebookAccountsPage";
+import FacebookAdAccountsPage from "./pages/FacebookAdAccountsPage";
 import TeamPage from "./pages/TeamPage";
 import AutoRulesPage from "./pages/AutoRulesPage";
 import BillingsPage from "./pages/BillingsPage";
@@ -38,6 +39,10 @@ const App = () => (
             <Route path="ai-analyst" element={<AiAnalystPage />} />
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="facebook-accounts" element={<FacebookAccountsPage />} />
+            <Route path="facebook-ad-accounts" element={<FacebookAdAccountsPage />} />
+            <Route path="facebook-pages" element={<div>Facebook Pages - Coming Soon</div>} />
+            <Route path="facebook-proxy" element={<div>Proxy Management - Coming Soon</div>} />
+            <Route path="facebook-groups" element={<div>Groups Management - Coming Soon</div>} />
             <Route path="team" element={<TeamPage />} />
             <Route path="auto-rules" element={<AutoRulesPage />} />
             <Route path="billings" element={<BillingsPage />} />
