@@ -4,9 +4,12 @@
     <meta charset="utf-8">
     <style>
         body {
-            width: 400px;
-            padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            width: 450px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
         }
         
         .header {
@@ -14,208 +17,161 @@
             margin-bottom: 20px;
         }
         
-        .logo {
+        .header h1 {
+            margin: 0;
             font-size: 18px;
-            font-weight: bold;
-            color: #1877f2;
-            margin-bottom: 5px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         
-        .subtitle {
+        .header p {
+            margin: 5px 0 0 0;
             font-size: 12px;
-            color: #65676b;
+            opacity: 0.8;
         }
         
-        .status {
-            padding: 10px;
-            margin: 10px 0;
+        .section {
+            background: rgba(255,255,255,0.1);
             border-radius: 8px;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .status.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .status.warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .btn {
-            width: 100%;
             padding: 12px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 8px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .section h3 {
+            margin: 0 0 8px 0;
             font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        .btn-primary {
-            background-color: #1877f2;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #166fe5;
-        }
-        
-        .btn-secondary {
-            background-color: #42b883;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #369870;
-        }
-        
-        .btn:disabled {
-            background-color: #e4e6ea;
-            color: #8a8d91;
-            cursor: not-allowed;
-        }
-        
-        .token-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 12px;
-        }
-        
-        .token-preview {
-            background-color: #e3f2fd;
-            padding: 10px;
+        .token {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 8px;
+            margin: 5px 0;
             border-radius: 4px;
-            margin: 10px 0;
             font-family: monospace;
             font-size: 11px;
             word-break: break-all;
-            max-height: 100px;
-            overflow-y: auto;
+            cursor: pointer;
+            transition: background 0.2s;
         }
         
-        .instructions {
-            font-size: 12px;
-            color: #65676b;
-            line-height: 1.4;
-            margin: 15px 0;
+        .token:hover {
+            background: rgba(255,255,255,0.3);
         }
         
-        .loading {
-            display: none;
-            text-align: center;
-            color: #1877f2;
-        }
-        
-        .copy-success {
-            color: #28a745;
-            font-size: 12px;
-            text-align: center;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .field-group {
-            margin-bottom: 15px;
-        }
-        
-        .field-label {
-            font-weight: 500;
-            font-size: 12px;
-            color: #1c1e21;
-            margin-bottom: 5px;
-        }
-        
-        .field-value {
-            background-color: #f0f2f5;
+        .account {
+            background: rgba(76, 175, 80, 0.3);
             padding: 8px;
+            margin: 5px 0;
             border-radius: 4px;
             font-family: monospace;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .account-name {
+            font-family: Arial, sans-serif;
             font-size: 10px;
-            word-break: break-all;
-            max-height: 60px;
-            overflow-y: auto;
+            opacity: 0.8;
+        }
+        
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin: 5px 0;
+            font-size: 14px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .button:hover {
+            background: #45a049;
+        }
+        
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        .warning { background: rgba(255, 193, 7, 0.3); }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .copy-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.4);
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">🤖 AI-Buyer</div>
-        <div class="subtitle">Facebook Token Extractor</div>
+        <h1>🎯 Facebook Token Extractor</h1>
+        <p>FBTool.pro approach | AI Buyer</p>
     </div>
-
-    <div id="status" class="status warning">
-        📍 Відкрийте Facebook Ads Manager
-    </div>
-
-    <div class="instructions">
-        <strong>Інструкція:</strong><br>
-        1. Відкрийте <a href="https://adsmanager.facebook.com" target="_blank">Facebook Ads Manager</a><br>
-        2. Переконайтеся, що ви авторизовані<br>
-        3. Натисніть "Витягти дані"
-    </div>
-
-    <button id="extractBtn" class="btn btn-primary">
-        🔍 Витягти дані з Facebook
-    </button>
-
-    <div id="loading" class="loading">
-        ⏳ Витягуємо дані...
-    </div>
-
-    <div id="tokenInfo" class="token-info" style="display: none;">
-        <div class="field-group">
-            <div class="field-label">Access Token:</div>
-            <div id="tokenPreview" class="field-value"></div>
-        </div>
-        
-        <div class="field-group">
-            <div class="field-label">User Agent:</div>
-            <div id="userAgentPreview" class="field-value"></div>
-        </div>
-        
-        <div class="field-group">
-            <div class="field-label">Cookies Count:</div>
-            <div id="cookiesCount" class="field-value"></div>
-        </div>
-
-        <button id="copyMultiTokenBtn" class="btn btn-secondary">
-            📋 Скопіювати Мультитокен
-        </button>
-        
-        <div class="field-group">
-            <div class="field-label">AI-Buyer URL:</div>
-            <input type="text" id="aibuyerUrl" class="field-value" 
-                   placeholder="http://localhost:8080" 
-                   style="width: 100%; padding: 4px; border: 1px solid #ddd; border-radius: 4px;">
-            <div style="font-size: 10px; color: #65676b; margin-top: 2px;">
-                Залиште порожнім для автовизначення
-            </div>
-        </div>
-        
-        <button id="sendToAIBuyerBtn" class="btn btn-primary">
-            🚀 Відправити в AI-Buyer
-        </button>
-        
-        <div id="copySuccess" class="copy-success">
-            ✅ Мультитокен скопійовано в буфер обміну!
+    
+    <div class="section">
+        <h3>🔑 Access Tokens</h3>
+        <div id="tokens">
+            <div class="status info">No tokens found. Visit Facebook Ads Manager first.</div>
         </div>
     </div>
-
+    
+    <div class="section">
+        <h3>📊 Ad Accounts</h3>
+        <div id="accounts">
+            <div class="status info">No accounts found. Extract tokens first.</div>
+        </div>
+    </div>
+    
+    <button class="button" id="extractBtn">� Extract Now</button>
+    <button class="button" id="refreshBtn">🔄 Refresh Data</button>
+    <button class="button" id="copyAllBtn">📋 Copy All Data</button>
+    
+    <div id="status" class="status info">Ready to extract Facebook data</div>
+    
+    <div class="stats">
+        <span id="lastUpdate">Never updated</span>
+        <span id="pageInfo">Not on Facebook</span>
+    </div>
+    
     <script src="popup.js"></script>
 </body>
 </html>

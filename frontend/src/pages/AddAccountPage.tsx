@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export default function FacebookAccountsPage() {
+export default function AddAccountPage() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
@@ -19,37 +20,26 @@ export default function FacebookAccountsPage() {
     cookies: '',
     groupName: ''
   });
-  const [multitoken, setMultitoken] = useState('');
 
-  // Handle multitoken parsing
-  const parseMultitoken = (multitokenString: string) => {
-    try {
-      // Try to decode as base64 first, then parse JSON
-      let decodedData;
+  // Handle multitoken parameter from browser extension
+  useEffect(() => {
+    const multitoken = searchParams.get('multitoken');
+    if (multitoken) {
       try {
-        decodedData = JSON.parse(atob(multitokenString.trim()));
-      } catch {
-        // If base64 fails, try direct JSON parse
-        decodedData = JSON.parse(multitokenString.trim());
-      }
-      
-      // Auto-fill form data
-      setFormData(prev => ({
-        ...prev,
-        token: decodedData.token || '',
-        userAgent: decodedData.ua || '',
-        cookies: JSON.stringify(decodedData.cookies, null, 2) || ''
-      }));
-      
-      console.log('Multitoken parsed successfully:', decodedData);
-    } catch (error) {
-      console.error('Error parsing multitoken:', error);
-      // Don't show alert for empty strings
-      if (multitokenString.trim()) {
-        alert('Ошибка при парсинге мультитокена. Проверьте формат данных.');
+        const decodedData = JSON.parse(decodeURIComponent(multitoken));
+        
+        // Auto-fill form data
+        setFormData(prev => ({
+          ...prev,
+          token: decodedData.token || '',
+          userAgent: decodedData.ua || '',
+          cookies: JSON.stringify(decodedData.cookies, null, 2) || ''
+        }));
+      } catch (error) {
+        console.error('Error parsing multitoken:', error);
       }
     }
-  };
+  }, [searchParams]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,31 +88,6 @@ export default function FacebookAccountsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid gap-2 p-4 bg-blue-50 rounded-md">
-              <Label htmlFor="multitoken" className="text-blue-700">Мультитокен из расширения</Label>
-              <Textarea 
-                id="multitoken" 
-                placeholder="Скопируйте и вставьте мультитокен из браузерного расширения..." 
-                value={multitoken}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setMultitoken(value);
-                  if (value.trim()) {
-                    parseMultitoken(value);
-                  }
-                }}
-                rows={3}
-                className="bg-white"
-              />
-              <p className="text-sm text-blue-600">
-                При вставке мультитокена поля ниже заполнятся автоматически
-              </p>
-            </div>
-            
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-600 font-medium mb-4">Параметры аккаунта:</p>
-            </div>
-            
             <div className="grid gap-2">
               <Label htmlFor="account-name">Название *</Label>
               <Input 

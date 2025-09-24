@@ -11,6 +11,7 @@ import StatisticsPage from "./pages/StatisticsPage";
 import CreativesPage from "./pages/CreativesPage";
 import AiAnalystPage from "./pages/AiAnalystPage";
 import AccountsPage from "./pages/AccountsPage";
+import AddAccountPage from "./pages/AddAccountPage";
 import FacebookAccountsPage from "./pages/FacebookAccountsPage";
 import TeamPage from "./pages/TeamPage";
 import AutoRulesPage from "./pages/AutoRulesPage";
@@ -30,6 +31,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
         <Routes>
+          <Route path="/accounts/add" element={<AddAccountPage />} />
           <Route path="/" element={<MainLayout />}>
             <Route index element={<DashboardPage />} />
             <Route path="autoupload" element={<AutoUploadPage />} />

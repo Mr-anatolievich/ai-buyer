@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,145 +15,126 @@ import { MoreHorizontal, Search, Filter, CreditCard, TrendingUp, DollarSign, Cal
 interface AdAccount {
   id: string;
   name: string;
-  accountId: string;
-  businessManager?: string;
-  timezone: string;
+  account_status: string;
   currency: string;
-  country: string;
-  totalSpent: number;
-  billingAmount: number;
-  billingLimit: number;
-  dailyLimit?: number;
-  spendLimit?: number;
-  hasCard: boolean;
-  cardType?: string;
-  cardLast4?: string;
-  status: 'active' | 'disabled' | 'risk_payment' | 'unsettled';
-  nextBillingDate: string;
-  autoComments: boolean;
-  notifications: {
-    billings: boolean;
-    moderation: boolean;
-    status: boolean;
-  };
+  timezone: string;
+  business?: string;
+  spend_cap: number;
+  daily_spend_limit: number;
+  amount_spent: number;
+  balance: number;
 }
 
 interface FacebookAccount {
   id: string;
   name: string;
-  username: string;
+  facebook_id: string;
+  status: string;
+  token_status: string;
 }
-
-const mockFacebookAccounts: FacebookAccount[] = [
-  { id: '18679684', name: 'seesf', username: 'Yus Supriyadi' },
-  { id: '12345678', name: 'Test Account', username: 'Test User' },
-];
-
-const mockAdAccounts: AdAccount[] = [
-  {
-    id: '429902116796948',
-    name: 'Yus Supriyadi',
-    accountId: '18679684',
-    timezone: 'Asia/Ho_Chi_Minh',
-    currency: 'IDR',
-    country: 'ID',
-    totalSpent: 0,
-    billingAmount: 0,
-    billingLimit: 0,
-    dailyLimit: 825300,
-    hasCard: false,
-    status: 'active',
-    nextBillingDate: '2025-09-17',
-    autoComments: false,
-    notifications: { billings: false, moderation: false, status: true }
-  },
-  {
-    id: '593095547230149',
-    name: 'ADS-Yarmo +3 13',
-    accountId: '18679684',
-    businessManager: 'ไตรพิมพ์ BM (4108679449402553)',
-    timezone: 'Europe/Sofia',
-    currency: 'USD',
-    country: 'US',
-    totalSpent: 16.06,
-    billingAmount: 1.9,
-    billingLimit: 5,
-    dailyLimit: 250,
-    spendLimit: 15.98,
-    hasCard: true,
-    cardType: 'VISA',
-    cardLast4: '3314',
-    status: 'active',
-    nextBillingDate: '2025-09-21',
-    autoComments: false,
-    notifications: { billings: false, moderation: false, status: true }
-  },
-  {
-    id: '2222150628302039',  
-    name: 'ADS-Yarmo +3 3',
-    accountId: '18679684',
-    businessManager: 'ไตรพิมพ์ BM (4108679449402553)',
-    timezone: 'Asia/Kuwait',
-    currency: 'USD',
-    country: 'US',
-    totalSpent: 4528.1,
-    billingAmount: 44.49,
-    billingLimit: 231,
-    hasCard: true,
-    cardType: 'Mastercard',
-    cardLast4: '1466',
-    status: 'active',
-    nextBillingDate: '2025-10-14',
-    autoComments: false,
-    notifications: { billings: false, moderation: false, status: true }
-  },
-  {
-    id: '658099930640807',
-    name: 'ADS-Yarmo +3 6',
-    accountId: '18679684',
-    businessManager: 'ไตรพิมพ์ BM (4108679449402553)',
-    timezone: 'Europe/Chisinau',
-    currency: 'USD',
-    country: 'US',
-    totalSpent: 0,
-    billingAmount: 0,
-    billingLimit: 170,
-    spendLimit: 1,
-    hasCard: false,
-    status: 'risk_payment',
-    nextBillingDate: '2025-09-28',
-    autoComments: false,
-    notifications: { billings: false, moderation: false, status: true }
-  }
-];
 
 export default function FacebookAdAccountsPage() {
   const t = useTranslations();
   const [selectedAccount, setSelectedAccount] = useState<string>('');
-  const [multiSelect, setMultiSelect] = useState(false);
   const [selectedAdAccounts, setSelectedAdAccounts] = useState<string[]>([]);
+  const [multiSelect, setMultiSelect] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  
+  // States for dynamic data
+  const [facebookAccounts, setFacebookAccounts] = useState<FacebookAccount[]>([]);
+  const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [accountsLoading, setAccountsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const selectedFacebookAccount = mockFacebookAccounts.find(acc => acc.id === selectedAccount);
-  const adAccounts = selectedAccount ? mockAdAccounts.filter(acc => acc.accountId === selectedAccount) : [];
+  // Load Facebook accounts from API
+  const loadFacebookAccounts = async () => {
+    setAccountsLoading(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/facebook/accounts');
+      const result = await response.json();
+      
+      if (response.ok && result.status === 'success') {
+        setFacebookAccounts(result.data);
+      } else {
+        setError('Помилка завантаження аккаунтів');
+      }
+    } catch (err) {
+      setError('Помилка з\'єднання з сервером');
+      console.error('Load accounts error:', err);
+    } finally {
+      setAccountsLoading(false);
+    }
+  };
+
+  // Load ad accounts for selected Facebook account
+  const loadAdAccounts = async (accountId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:8000/api/facebook/accounts/${accountId}/adaccounts`);
+      const result = await response.json();
+      
+      if (response.ok && result.status === 'success') {
+        setAdAccounts(result.data);
+      } else {
+        // Показуємо детальну інформацію про помилку
+        let errorMessage = result.detail || 'Помилка завантаження рекламних кабінетів';
+        
+        if (result.suggestion) {
+          errorMessage += `\n💡 ${result.suggestion}`;
+        }
+        
+        // Додаткові поради для користувача
+        if (errorMessage.includes('токен') || errorMessage.includes('token')) {
+          errorMessage += '\n\n🔧 Як виправити: Перейдіть в налаштування аккаунта та оновіть токен доступу.';
+        } else if (errorMessage.includes('permission') || errorMessage.includes('дозвіл')) {
+          errorMessage += '\n\n🔧 Як виправити: Переконайтеся що токен має дозвіл "ads_read".';
+        }
+        
+        setError(errorMessage);
+        setAdAccounts([]);
+      }
+    } catch (err) {
+      setError('Помилка з\'єднання з сервером. Перевірте чи працює backend.');
+      setAdAccounts([]);
+      console.error('Load ad accounts error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load Facebook accounts on component mount
+  useEffect(() => {
+    loadFacebookAccounts();
+  }, []);
+
+  // Load ad accounts when account is selected
+  useEffect(() => {
+    if (selectedAccount) {
+      loadAdAccounts(selectedAccount);
+    } else {
+      setAdAccounts([]);
+    }
+  }, [selectedAccount]);
+
+  const selectedFacebookAccount = facebookAccounts.find(acc => acc.id === selectedAccount);
   
   const filteredAdAccounts = adAccounts.filter(account => {
     const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          account.id.includes(searchTerm);
-    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(account.status);
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(account.account_status);
     return matchesSearch && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'ACTIVE':
         return <Badge className="bg-success text-success-foreground">Активен</Badge>;
-      case 'disabled':
+      case 'DISABLED':
         return <Badge variant="secondary">Відключений</Badge>;
-      case 'risk_payment':
-        return <Badge className="bg-warning text-warning-foreground">RISK_PAYMENT</Badge>;
-      case 'unsettled':
+      case 'UNSETTLED':
         return <Badge className="bg-destructive text-destructive-foreground">UNSETTLED</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
@@ -182,6 +163,12 @@ export default function FacebookAdAccountsPage() {
         <h1 className="text-3xl font-bold">{t.adAccounts}</h1>
       </div>
 
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="text-destructive text-sm whitespace-pre-line">{error}</div>
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -207,11 +194,17 @@ export default function FacebookAdAccountsPage() {
                   <SelectValue placeholder="Оберіть акаунт..." />
                 </SelectTrigger>
                 <SelectContent className="bg-background border z-50">
-                  {mockFacebookAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      #{account.id} - {account.name} ({account.username})
-                    </SelectItem>
-                  ))}
+                  {accountsLoading ? (
+                    <SelectItem value="loading" disabled>Завантаження...</SelectItem>
+                  ) : facebookAccounts.length === 0 ? (
+                    <SelectItem value="no-accounts" disabled>Немає доступних аккаунтів</SelectItem>
+                  ) : (
+                    facebookAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        #{account.id} - {account.name} ({account.facebook_id})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -296,105 +289,107 @@ export default function FacebookAdAccountsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAdAccounts.map((account) => (
-                    <TableRow key={account.id} className={account.status === 'active' ? 'bg-success/5' : ''}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedAdAccounts.includes(account.id)}
-                          onCheckedChange={() => toggleAdAccountSelection(account.id)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <h6 className="font-medium">{account.name}</h6>
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <p><strong>ID:</strong> {account.id}</p>
-                            {account.businessManager && (
-                              <p><strong>БМ:</strong> {account.businessManager}</p>
-                            )}
-                            <p><strong>Часовий пояс:</strong> {account.timezone}</p>
-                            <p><strong>Валюта:</strong> {account.currency}</p>
-                            <p><strong>Країна:</strong> {account.country}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-xs space-y-1">
-                          {account.billingAmount > 0 && (
-                            <p><strong>Біллінг:</strong> {account.billingAmount}/{account.billingLimit} {account.currency}</p>
-                          )}
-                          <p><strong>Витрачено всього:</strong> {account.totalSpent} {account.currency}</p>
-                          <p><strong>Дата списання:</strong> {account.nextBillingDate}</p>
-                          {account.dailyLimit && (
-                            <p><strong>Ліміт:</strong> {account.spendLimit ? `${account.spendLimit} з ` : ''}{account.dailyLimit} {account.currency}/день</p>
-                          )}
-                          <p><strong>Карта:</strong> {account.hasCard ? `${account.cardType} *${account.cardLast4}` : 'Немає'}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant={account.autoComments ? "default" : "outline"}>
-                          {account.autoComments ? 'Увімк' : 'Вимк'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex flex-col gap-1">
-                          <Badge variant={account.notifications.billings ? "default" : "outline"} className="text-xs">
-                            Біллінги
-                          </Badge>
-                          <Badge variant={account.notifications.moderation ? "default" : "outline"} className="text-xs">
-                            Модерація
-                          </Badge>
-                          <Badge variant={account.notifications.status ? "default" : "outline"} className="text-xs">
-                            Статус
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {getStatusBadge(account.status)}
-                        {account.status === 'risk_payment' && (
-                          <div className="mt-2">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="sm" variant="outline" className="text-xs">
-                                  <AlertTriangle className="w-3 h-3 mr-1" />
-                                  Подати на розбан
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="bg-background border z-50">
-                                <DropdownMenuItem>Через списання</DropdownMenuItem>
-                                <DropdownMenuItem>Новий тікет</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-background border z-50">
-                            <DropdownMenuItem>
-                              <TrendingUp className="w-4 h-4 mr-2" />
-                              Статистика
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              Консоль
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <DollarSign className="w-4 h-4 mr-2" />
-                              Біллінги
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              Видалити
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        Завантаження рекламних кабінетів...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-destructive">
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredAdAccounts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        {selectedAccount ? 'Немає рекламних кабінетів для цього аккаунта' : 'Оберіть аккаунт для перегляду рекламних кабінетів'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredAdAccounts.map((account) => (
+                      <TableRow key={account.id} className={account.account_status === 'ACTIVE' ? 'bg-success/5' : ''}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedAdAccounts.includes(account.id)}
+                            onCheckedChange={() => toggleAdAccountSelection(account.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <h6 className="font-medium">{account.name}</h6>
+                            <div className="text-xs text-muted-foreground space-y-1">
+                              <p><strong>ID:</strong> {account.id}</p>
+                              {account.business && (
+                                <p><strong>БМ:</strong> {account.business}</p>
+                              )}
+                              <p><strong>Часовий пояс:</strong> {account.timezone}</p>
+                              <p><strong>Валюта:</strong> {account.currency}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-xs space-y-1">
+                            <p><strong>Витрачено:</strong> {account.amount_spent} {account.currency}</p>
+                            <p><strong>Баланс:</strong> {account.balance} {account.currency}</p>
+                            {account.spend_cap > 0 && (
+                              <p><strong>Ліміт витрат:</strong> {account.spend_cap} {account.currency}</p>
+                            )}
+                            {account.daily_spend_limit > 0 && (
+                              <p><strong>Денний ліміт:</strong> {account.daily_spend_limit} {account.currency}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline">
+                            Вимк
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              Біллінги
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Модерація
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Статус
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {getStatusBadge(account.account_status)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-background border z-50">
+                              <DropdownMenuItem>
+                                <TrendingUp className="w-4 h-4 mr-2" />
+                                Статистика
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Консоль
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <DollarSign className="w-4 h-4 mr-2" />
+                                Біллінги
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive">
+                                Видалити
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI-Buyer Facebook Token Extractor",
-  "version": "1.0.0",
-  "description": "Витягує токени, cookies та UserAgent з Facebook Ads Manager для AI-Buyer",
+  "name": "Facebook Ad Accounts Extractor",
+  "version": "2.0.0",
+  "description": "Витягує дані про Facebook рекламні кабінети прямо з браузера з автоматичними cookies",
   "permissions": [
     "activeTab",
     "cookies",
@@ -20,7 +20,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "AI-Buyer Token Extractor",
+    "default_title": "Facebook Ad Accounts Extractor",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

@@ -1,0 +1,14 @@
+{
+  "ads_manager_campaigns": {
+    "error": "HTTP Error 400: Bad Request"
+  },
+  "ads_manager_accounts": {
+    "error": "HTTP Error 400: Bad Request"
+  },
+  "business_ads_manager": {
+    "error": "HTTP Error 400: Bad Request"
+  },
+  "facebook_main": {
+    "error": "HTTP Error 400: Bad Request"
+  }
+}

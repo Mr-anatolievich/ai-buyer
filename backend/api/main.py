@@ -35,9 +35,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite dev server
         "http://localhost:3000",  # Alternative React dev server
+        "http://localhost:8080",  # Current Vite dev server
         "http://localhost:8082",  # New Vite dev server
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
         "http://127.0.0.1:8082",
     ],
     allow_credentials=True,
